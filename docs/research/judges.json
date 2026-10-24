@@ -1,0 +1,95 @@
+[
+ {
+  "scores": [
+   {
+    "key": "mvp-first",
+    "commercial_viability": 6,
+    "technical_feasibility": 5,
+    "agent_value": 6,
+    "survives_critique": 6,
+    "total": 23,
+    "rationale": "Best time-to-revenue path with a concrete buyer pattern (PR-level GitHub App a VP Eng can expense in a quarter), attach-to-existing adoption rather than rewrite-to-adopt, and the only proposal whose V0 principle ('generate no application code') removes the MDA round-trip and eject problems entirely. The critics' top fixes are all subtractive: replace opaque closures with a small typed combinator subset plus opaque-marked lambdas, split defineAction into an HTTP-boundary observe mode and a refactored mode so the afternoon-adoption claim becomes true, drop token counts from the PR comment in favor of semantic impact and contract coverage, narrow V0 to one ORM + one router + Zod, add a docs-equalized Arm A' and a free-CodeGraph arm, and cut the benchmark to 20 tasks x N=10 x one model. Agent value is real but concentrated in the fix loop (cascade collapse, since_last_green, check(scope=affected), impact) rather than retrieval; an agent-seat estimate of 15-30% fewer tokens and one fewer iteration per task on a 60k repo is credible. Weaknesses that remain after fixes: scope is still 1.5-2x what two engineers can ship in 6 months, the Team tier likely has no buyer (mid-size security teams will not upload their domain model), and the M9 Enterprise deal is arithmetically earlier than the design-partner free period allows. Pitfall-encoding checks (Stripe raw-body) are the single best idea in all three documents and belong here."
+   },
+   {
+    "key": "agent-first",
+    "commercial_viability": 4,
+    "technical_feasibility": 3,
+    "agent_value": 7,
+    "survives_critique": 3,
+    "total": 17,
+    "rationale": "Highest ceiling for real agent-cost reduction: locality (intent/policy/requires/ensures/run in one 30-line declaration) and derived layers (schema->types->validation->routes->OpenAPI->migration) remove the layer-mismatch error class that agents actually make, and policy-coverage-as-compile-error plus generated auth-matrix tests is the single largest reliability gain any proposal offers. But it does not survive its own critiques. The benchmark it calls non-negotiable (2x2 arms) requires the Stage 1 extractor it defers, so the central attribution decision cannot be made at M3. The ICP ('30-300 engineer TS monorepos') is contradicted by 'greenfield only, no legacy migration in year one', which caps paid footprint at one service and makes $60K governance contracts implausible; the actual decision-maker is the staff engineer who owns the monorepo and is being asked to adopt Hono+Drizzle+pg-boss+a bespoke db facade from a two-person vendor (Encore's five-year trajectory is the base rate). The 12-week V0 (IR, evaluator, five emitters, runtime, fast-check test gen, patch projection, trace recorder, MCP, seed app, benchmark harness, public launch) is 6-8 engineer-years; the benchmark budget is understated by roughly 10x (3,600 sessions, ~350-400k LOC of audited baselines); 'bootstrap on design-partner services' contradicts 'free Enterprise for six months'. The facade API (db.Member.none, events.emittedExactly, step.waitFor) relocates the no-training-data tax into a wrong-prior tax invisible to tsc. Also the first paid feature (token dashboards) is unbuildable from MCP. The critics' own fix ('invert the sequencing') converts it into mvp-first."
+   },
+   {
+    "key": "risk-first",
+    "commercial_viability": 5,
+    "technical_feasibility": 5,
+    "agent_value": 5,
+    "survives_critique": 5,
+    "total": 20,
+    "rationale": "Substantively the same product as mvp-first with the correct ordering (IR as product, TS-embedded, .al gated) and some discipline mvp-first lacks: observational Stage A annotations that do not own the transaction, a quarterly re-run against the newest frontier model as an early-warning system, freshness as a P0 bug class, and the handler-line-ratio tripwire. It loses to mvp-first on the commercial leg: the paid tier charges for a hosted graph the architecture itself calls a cache rebuildable in seconds, a token dashboard an MCP server cannot see, and an agent-change audit trail git already provides; positioning ('semantic layer between your codebase and every agent') is indistinguishable from Augment/Sourcegraph/Greptile copy. The $22-32K/month burn and 'bootstrap on services while giving Enterprise away free' are the least credible numbers of the three. It ships a five-framework extractor (Prisma+Drizzle x Express+Hono+NestJS) for one engineer, keeps apply_patch (which agent critics say they will route around), makes intent a compiler error (wall of errors on first run of any real repo), and the DSL gate is a conjunction the team has every incentive never to satisfy; one critic fairly calls it 'a surrender dressed as a strategy'. Day-one value on an un-annotated repo is a commodity code graph because contracts/policies/effects are unrecoverable by extraction and declared effects are unverified strings. Agent value is real on medium/large repos (impact, cascade collapse, check(affected)) but it has no equivalent of mvp-first's lead pitfall checks or agent-first's policy-coverage error."
+   }
+  ],
+  "winner": "mvp-first",
+  "graft_from_others": [
+   "From agent-first: policy coverage as a hard compile error plus a generated HTTP-level auth-matrix test (anonymous / member / member-of-other-org / admin) for every exposed action. Ship it as a lint-plus-test over existing routes in V0; it is the largest single reliability gain any proposal offers and it needs no codegen.",
+   "From agent-first: encoded third-party pitfalls as primitives, not just static checks: webhook raw-body + signature verification, idempotency key with dedupe-table migration and a duplicate-delivery test, cursor pagination off-by-one. Implement as runtime/test-time generated tests (the signed-raw-body webhook test) rather than static Express middleware analysis, which is unreliable.",
+   "From agent-first: the 2x2 attribution design extended with two extra arms the critics demanded: (A') plain repo plus an equally careful CLAUDE.md/ARCHITECTURE.md/docstrings, and (A+lib) plain TS plus the same pitfall primitives shipped as an ordinary library with no compiler. Charge MCP schema tokens and the CLAUDE.md block to the Lattice arms; report syntactic-error rate and tool-usage rate separately; pick tasks where Arm A scores 50-70% to avoid ceiling effects.",
+   "From agent-first: the deterministic error-signature-to-repair-strategy table (the RustAssistant lesson), but only attach fixes to diagnostic codes whose repair is genuinely deterministic (missing policy, undeclared event, dropped field); for logic/test failures return actual-vs-expected plus diff-since-green and no ranked hypothesis. Drop fabricated confidence floats; attach an evidence string ('used by 3 sibling actions', 'routes/stripe.ts:12 app.post literal') instead.",
+   "From agent-first: keep the compile-to-everything declaration form (entity/action/event/workflow deriving Drizzle/Zod/Hono/pg-boss) as the opt-in 'new service inside an existing monorepo' mode for Stage 2, with @generated headers, content-hash writes, check --clean drift guard, edit_source refusing generated files, and a demoable eject. Do not make it the entry point.",
+   "From agent-first: the saas-starter (orgs, members, invites, RBAC, Stripe webhook) as both the reference app and the benchmark seed, authored or audited outside the team; and a paid external security review of the contracts runtime and policy evaluator before any public release.",
+   "From risk-first: the observational Stage A contract() form that asserts requires/ensures/policy at the boundary without owning the transaction, idempotency store, or event bus. This is the 'observe' mode the mvp-first critics asked for; it makes 'adopt a 60k-LOC repo in an afternoon' true and keeps the 0.x library out of the production request path. Reserve transaction/idempotency ownership for the refactored defineAction mode.",
+   "From risk-first: quarterly re-run of the benchmark against the newest frontier model as the premise-erosion early-warning system, with the explicit rule that the measured delta must not be shrinking faster than the team ships; this converts the 2027 'vendors absorb orientation' risk into a tracked number.",
+   "From risk-first: freshness handled as refuse-or-rebuild (on-demand rebuild per call by content hash, stale answers never returned silently) rather than a freshness flag the agent will not read; plus handling of concurrent subagents editing the same tree.",
+   "From risk-first: the handler-line-ratio metric (if handler TS exceeds ~40% of lines on the reference app, the primitive set is too thin) and the read-only Markdown docs projection as a release gate on the reference app rather than a compiler error; make intent recommended-and-surfaced-in-inspect, required only on exposed actions in the declared form, never on extracted nodes.",
+   "From risk-first's critics (and echoed by all six): mark origins as extracted | declared | verified, verify declared effects/writes against handler code with a static scan, and ship a 'lattice propose/suggest' pass that drafts intent and contracts from existing Zod schemas, guards, and tests so humans approve spec cards in a PR; this is how contract density grows past the first five actions and is itself a sellable compliance workflow.",
+   "From risk-first's and mvp-first's agent critics: a PR-gate rule that flags any change which weakens or removes a requires/ensures/policy as a separate review item. It stops agents from 'fixing' failing contract tests by loosening the contract and is the first governance feature an enterprise will understand; it also makes the policy gate a semantic lint on every PR regardless of author, sidestepping the unreliable agent-vs-human signal.",
+   "From risk-first: token budgets set by relevance rather than a flat 1500 (larger default for inspect with the source span inline for short nodes, ~800 for find), docs served as an MCP resource, tool surface consolidated to about six tools plus a first-class CLI --json path, and session-aware deltas made opt-in via an explicit seen=[ids] parameter rather than suppressed by default.",
+   "From risk-first's critics: replace the Team tier's hosted graph and token dashboard with a seat-priced PR bot (semantic impact, contract/policy coverage, contract-weakening flags) sold to teams until SOC 2 exists; scope cost telemetry to Claude Code OTel export only as an honestly labeled Enterprise add-on; and hand the published benchmark harness to a neutral third party (university group or benchmark org) before quoting a headline number."
+  ]
+ },
+ {
+  "scores": [
+   {
+    "key": "mvp-first",
+    "commercial_viability": 6,
+    "technical_feasibility": 5,
+    "agent_value": 6,
+    "survives_critique": 5,
+    "total": 22,
+    "rationale": "Best adoption shape of the three: attach to an existing repo, generate only tests/OpenAPI/graph, no round-trip problem, and a paid artifact (the PR report) that a manager actually sees in their workflow. The GitHub App is the only first-paid-feature across the three proposals that is fixable rather than fictional: swap 'tokens consumed' (unobservable from MCP) for contract coverage, semantic impact, and contract-weakening flags, and it still sells. The pitfall-encoding diagnostic (Stripe raw body) is the single best feature in any of the documents and needs no language. What does not survive: contracts as opaque TS closures while promising fast-check generation, spec cards, static impact, and prod sampling; a runtime that owns transactions and an idempotency table while claiming 'handler unchanged'; a 2x4x2 extractor matrix for two engineers; a conjunctive benchmark claim that N=5 cannot power; the M9 Enterprise deal and services-revenue arithmetic. Those are large but correctable cuts, not thesis failures. The honest version of this plan ('IR plus contracts plus PR bot; the language is a 2028 question') is still a fundable dev-tools company at this team size, and it keeps every door to the founder's vision open at the lowest cost of the three."
+   },
+   {
+    "key": "agent-first",
+    "commercial_viability": 4,
+    "technical_feasibility": 3,
+    "agent_value": 7,
+    "survives_critique": 4,
+    "rationale": "Highest ceiling for the agent: locality (intent/policy/requires/ensures/run in one 30-line declaration), derived layers that make schema/DTO/route mismatches impossible, policy coverage as a hard compile error with generated auth-matrix tests, and encoded webhook/idempotency primitives. If it existed and had a corpus, this is the representation I would want an agent to work in. But as a business and a build plan it is Encore with two people and twelve weeks: a second HTTP framework, second ORM, second job system, a bespoke data-access facade with zero prior, and a runtime in the production hot path, sold to an ICP ('30-300 engineer TS monorepos') that has no greenfield and will not adopt a 12-month-old framework from a bus-factor-two vendor. The benchmark is internally inconsistent (arm B needs the extractor it defers), underbudgeted by an order of magnitude, and the task categories map one-to-one onto the primitive list, so no skeptic will credit the gap. The contract-lambda contradiction is the same as the others but here it carries the entire differentiation. 'Bootstrap on design-partner services' while giving design partners free Enterprise is a plan with no revenue. This is the right Stage 2 design and the wrong first company.",
+    "total": 18
+   },
+   {
+    "key": "risk-first",
+    "commercial_viability": 5,
+    "technical_feasibility": 5,
+    "agent_value": 6,
+    "survives_critique": 5,
+    "total": 21,
+    "rationale": "Near-identical to mvp-first in substance (IR as product, TS-embedded, attach to existing repos, no codegen in Stage A) with a lower and more believable burn ($22-32K/month) and a cleaner Stage A to Stage B story (declared form is a strict superset of annotated form, nothing relearned). The quarterly re-run against the newest frontier model as an early-warning system is the most intellectually honest risk control in any of the documents. It loses to mvp-first on monetization: the first paid product is a hosted graph (a SQLite cache rebuildable in seconds, nobody pays to avoid that burden), a token dashboard the MCP server cannot see, and an audit trail that reduces to git log, whereas mvp-first at least anchors on a PR-visible artifact. It also carries the five-framework extractor sprawl, the same closure contradiction, the same 'annotation is actually a wrapper with a new calling convention' leak, and a DSL gate written as a conjunction that the people running it will never satisfy. The critiques are right that this is a contracts-and-impact layer wearing the language's clothes; the plan would be stronger if it said so and dropped the dashboards for a seat-priced PR bot."
+   }
+  ],
+  "winner": "mvp-first",
+  "graft_from_others": [
+   "From agent-first: policy coverage as a hard compile error plus a generated HTTP auth-matrix test (anonymous / member / other-org member / admin). Ship it in V0 as an add-on to existing Express/Hono+Prisma routes; it is the one reliability gain that is demonstrable in a demo and survives any outcome of the language bet.",
+   "From agent-first: encoded third-party pitfalls as library primitives, not only static lint. `integration('Stripe', { webhook: { verify: 'stripe-signature', rawBody: true } })` and `idempotent: { key }` generate a runtime test (signed raw body, duplicate delivery is a no-op) rather than a middleware-ordering heuristic that will false-negative on dynamic Express mounting.",
+   "From agent-first: locality as the real token saver. Even in the attach mode, make the declaration block (intent / policy / requires / ensures / effects) the single colocated thing an agent reads for an action, and have `inspect` return that span inline instead of ids-only when it is under ~400 tokens.",
+   "From agent-first: the extra benchmark arm 'plain TS + the same pitfall primitives shipped as an ordinary library with no compiler.' It separates 'good library' from 'representation' and is the arm that actually decides whether Stage 2 codegen deserves to exist.",
+   "From agent-first: text as the only source of truth with @generated headers, content-hash writes, `check --clean` drift guard, and `edit_source` refusing generated files. Not needed until Stage 2, but design the IR now so this is possible then.",
+   "From risk-first: the Stage A -> Stage B strict-superset rule. The declared form adds `input`/`output`/`paginate` to the annotated form; an agent that learned Stage A relearns nothing. Make this a design constraint on the contracts library API from day one.",
+   "From risk-first: quarterly benchmark re-run against the newest frontier model with a pre-stated 'delta must not shrink faster than we ship' rule, as the early-warning system for premise erosion.",
+   "From risk-first: a three-way `origin: extracted | declared | verified` where `verified` means a static scan confirmed declared effects/writes against the handler body; plus a `lattice suggest` pass that drafts contracts and intent from existing Zod schemas, guards, and tests, so the graph is not empty in week one and `intent` can be optional at compile time.",
+   "From risk-first: the lower burn envelope ($22-32K/month, 18 months under $550K) and the rule that the benchmark is the DevRel; drop the part-time devrel line from mvp-first.",
+   "From risk-first: handler-line-ratio tripwire (if handler TS exceeds ~40% of lines in the reference app the primitive set is too thin) and 'refuse or rebuild' on staleness instead of a freshness flag agents will not read.",
+   "From all critiques, mandatory for the winner: (1) an `observe(route, { requires, ensures })` HTTP-boundary mode with zero handler changes so 'afternoon adoption' is true, and `defineAction` only for refactored actions; (2) a small typed combinator subset for contracts/policies (`exists`, `unique`, `field().in()`, comparisons over input/result/actor) that lowers to IR, with raw lambdas allowed but marked `opaque` and excluded from test-gen/impact; (3) a PR gate that flags any change weakening or removing a contract or policy, which is simultaneously the fix for the agent loosening `ensures` to get green and the first governance feature a compliance buyer understands; (4) a docs-equalized Arm A' (CLAUDE.md + LSP + equivalent comments) and reported tool-usage rate, one model and N=10 on ~20 tasks before anything larger; (5) cut the token-cost dashboard to a Claude Code OTel-only Enterprise add-on, honestly scoped; (6) narrow V0 to one ORM and one or two routers (Prisma + Express/Hono + Zod); (7) rename away from 'Lattice' before any public artifact."
+  ]
+ }
+]

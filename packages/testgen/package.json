@@ -1,0 +1,16 @@
+{
+  "name": "@averr/testgen",
+  "version": "0.0.1",
+  "description": "Averr testgen package",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
+  "scripts": {
+    "test": "vitest run --dir test"
+  }
+}

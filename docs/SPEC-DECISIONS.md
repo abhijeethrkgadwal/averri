@@ -1,0 +1,77 @@
+# SPEC-DECISIONS — Decision log for the V0 specs
+
+Numbered, append-only. Each entry records a decision that deviates from the FINAL design document (`docs/research/00-FINAL-strategy-and-design.md`), resolves a conflict between review findings, or rejects a review finding, with the reason. Specs and types cite entries as `D-n`. Dates are the day the decision was applied to the specs.
+
+Reviews referenced: **R1** = implementer-standpoint review of the IR/core types and specs (13 blocking, 17 important, 18 nits); **R2** = agent-consumer review of the MCP/diagnostics/declaration specs (4 blocking, 13 important, 10 nits).
+
+---
+
+**D-1 — Tier 3 is a bare async function; there is no `guard()` wrapper.** (2026-10-24; R1 blocking 13, R2 blocking 1; deviates from FINAL §4/§6 which spell tier 3 as `guard(fn)`.)
+Both reviews reported that the worked example's `guard(async ({ input, actor }) => …)` fails `tsc` with `'input' is of type 'unknown'`, and proposed `GuardClause<I, R>` with inference from the contextual return type. That proposal was probed with `tsc` 5.9 and does **not** work: a call expression is not context-sensitive, so `guard(fn)` is checked in the first inference pass before the action's `I` has any candidate (the outer inference context maps `I` to the "no inference" wildcard), and `fn`'s parameter stays `unknown`. The only form TypeScript defers until `I` is known is a bare function expression, exactly as `run` already relies on. Therefore `requires`/`ensures` accept `AnalysableClause | GuardFn<z.output<I>, …>` and `policy.allow` accepts `AnalysableClause | PolicyGuardFn`. R2's option (a) ("let `action()` wrap bare functions, keep `guard()` for policies") was rejected because it creates two spellings for one concept (rule 1); with no input schema on policies `guard()` would add nothing there either. Construct count becomes "seven plus two builders". The IR tier name stays `guard`; the type-level distinction is `typeof clause === "function"`, and `e.and/or/not` reject functions by type. Verified in `packages/core/test/tier-types.test.ts`.
+
+**D-2 — Static lowering only; no registry in core; compiler does not import core.** (R1 blocking 1, R1 nit 17.) The compiler lowers declarations and `averr.config.ts` from the statically analysable subset (SPEC-DECLARATIONS §4.1) and derives Zod field names/types from the TypeChecker type of `z.output<typeof schema>`. Evaluating user modules would connect Prisma and instantiate Inngest/Stripe clients inside the compiler. A1004 is the diagnostic for non-analysable options (A9001 stays the tsc backstop). The "module-local registry the compiler reads with tsx" is deleted.
+
+**D-3 — `DbWhere` has one representation: canonical flat dotted keys, produced by the builder.** (R1 blocking 3.) The builder flattens nested source objects; runtime, IR and testgen see the same shape; `@averr/contracts` un-flattens into Prisma's nested `where` while substituting refs. Dotted keys may traverse only to-one relations; crossing a list relation or nesting `db.countWhere`/`sum`/`count` inside a `where` is A3009. Operator operands are restricted to `Ref | Lit | LenExpr` (`DbWhereOperand`, R1 nit 3).
+
+**D-4 — Fail-closed predicates and 401 for anonymous actors.** (R1 blocking 2; R1 important 7.) Any `where` ref evaluating to `undefined` makes `db.exists`/`db.unique`/`db.none` false and `db.countWhere` 0, skips the Prisma call, and records `undefinedRefs`. `authorize` with `actor === null` on a non-public declaration returns `401 Unauthenticated` (`AUTHENTICATION_FAILURE`) before the policy runs. Three fixture tests are mandatory for `@averr/contracts`.
+
+**D-5 — One declared-mode pipeline order; guards get the plain client; `transaction` passthrough.** (R1 blocking 4.) `validate → authorize (plain) → [tx] → load self (+includes) → requires (tier 1, 2, guards) → run → reload self → ensures (+invariants) → [commit] → emit`, written identically in SPEC-CONTRACTS §8, SPEC-DECLARATIONS §5.3 and core. `transaction?: boolean | { timeout?, maxWait? }` passes Prisma's interactive-transaction options through; `transaction: false` makes a postcondition failure report `committed: true`. The IR keeps `transaction: boolean` (the timeout is a runtime option, not a graph fact).
+
+**D-6 — Observe mode wraps at the fetch boundary; `handler` is optional; test DB is the project's `DATABASE_URL`; no pglite.** (R1 blocking 5, R2 blocking 2.) Hono `app.fetch(req)`, Express `http.createServer(app)` on an ephemeral port; Averr's own route matcher; `handler:` feeds only `effect-scan`/line counts/A2101. Without `handler`, `effects.verified.complete = false` and A4002 is `info`. Before/after state is the subject row (`findFirst`) and the rows of entities with invariants (`findMany`, diffed by `@id`); predicates need no snapshot. FINAL §6's "pglite in-process by default" is impossible with Prisma without a driver adapter; the project supplies the test database via `config.test.databaseUrlEnv`.
+
+**D-7 — A2103 redefined; no `public: true` fallback fix.** (R1 blocking 7, R2 blocking 4.) Warning: undeclared, non-public Exposure with no middleware in `config.authMiddleware`. Error: a bound declaration lacking both `policy` and `public` (only reachable when tsc is skipped); the sibling-policy fix applies to the error case only. The `public: true` fallback fix was removed because it is a hypothesis about authorization that the agent block tells agents to apply. `HealthCounters.exposuresWithoutPolicy` uses the warning definition.
+
+**D-8 — Exposure ids carry a column; HEAD/OPTIONS are skipped; `all`/`on` expand.** (R1 blocking 9.) Id = `<router>:<file>:<line>:<col>` of the method identifier. Adding `HEAD`/`OPTIONS` to `HTTP_METHODS` was rejected: it would let declarations target them without any contract use case; they produce no Exposure. Mount-prefix composition, middleware attribution, normalisation and the confidence table are in SPEC-IR §4.1.
+
+**D-9 — `verified` provenance lists every applicable verifier.** (R1 important 2, option (a).) `verifiers: VerifierId[]`; a node is verified iff all applicable verifiers passed. Named `verifiers` (plural) rather than the suggested `verifier: VerifierId[]`.
+
+**D-10 — `dependsOn` is a directed propagation table, not an undirected ≤3-hop closure.** (R1 important 3.) Entities are hubs; the closure would mark most of the graph affected. Table in SPEC-IR §5; `X -dependsOn-> Y` means "X is affected when Y changes"; transitive ≤ 2 steps with `via`.
+
+**D-11 — No runtime idempotency in V0.** (R1 blocking 11; deviates from FINAL §6 "in defineAction mode it is a primitive with a dedupe table migration".) A `averr_idempotency` table and its migration contradict "no application code in V0" and ARCHITECTURE §5. `idempotency` is a fact driving `pitfall.idempotency` ("single effect" = identical after-snapshots of `effects.verified.writes` tables between deliveries) and A5002. The dedupe primitive, replay semantics and TTL cleanup are Stage 2.
+
+**D-12 — Emit failure after commit is trace-only.** (R1 important 7.) A 500 for committed work would make clients retry and double-write. `PHASE_FAILURE.emit.status` is `null`; the outcome is recorded in the trace with `committed: true` and fails the test under Vitest. Success status is 200 by default; adapters may override.
+
+**D-13 — Generated Test nodes are derived from the graph; generated files are excluded from `contentHash`.** (R1 important 9.) Otherwise every build invalidates its own hash. `sourceHash` is compared with the `hash:` field of the `@generated` header for A6001; `contentHash` covers hand-written tests only.
+
+**D-14 — Snapshots are keyed by `contentHash`; `last-green.json` pins its snapshot.** (R1 blocking 10.) `GraphMeta` cannot be diffed against a `Graph`; commits do not exist for dirty trees. `last-green.json = { meta, tests, at, snapshot }`; the referenced snapshot is excluded from the LRU-20 prune. `check` also writes `last-check.json` so `explain {diagId}` resolves (R2 important 3).
+
+**D-15 — `entity.model` and `tenantKey` dropped.** (R1 important 17 and 4.) The entity name is the model name and the client accessor is `Uncapitalize(name)`; one fewer option to hallucinate (FINAL §11 risk 1). Tenant scoping in V0 is a policy predicate (FINAL §11.4); the V0 tenantKey check is removed. R2 important 7 asked to register A2106 as "Policy does not constrain tenant key" now; instead A2107 is **reserved** (comment in the registry) for the Stage 2 rule, because a registered code with no rule would be a dead entry agents can filter on but never see.
+
+**D-16 — Diagnostic code allocations.** (R1 important 4, R2 blocking 3, R2 important 7 and 10, R1 nit 15; the two reviews proposed conflicting numbers.)
+A1004 non-analysable option (also `$`-prefixed clause names) · A1005 keys out of canonical order (fmt check-only) · A2102 reserved · A2106 policy is an opaque guard (R1's meaning; R2's tenant meaning moved to reserved A2107) · A3007 ref-shaped literal on the rhs (R2's meaning; R1's "emitted/result outside ensures" is folded into A3003 as its text already allowed) · A3008 operator not applicable to operand type (R1; R2 wanted "unknown reference root" here) · A3009 where path crosses a list relation / nested db predicate · A3010 reference root looks misspelled (R2's "unknown root", renumbered) · A4005 integration called inside a Averr-owned transaction · A5001 demoted to warning without fix. Codes stay append-only; gaps are documented in the registry comment.
+
+**D-17 — A5001 is a warning without a fix; webhook declarations carry `scheme` and `secretEnv`.** (R1 important 5.) FINAL §6 rejected static middleware-order checks; A5001 now inspects inline forms only and the runtime pitfall tests are the real check. A header name cannot tell the generator how to sign, hence `scheme: "stripe" | "hmac-sha256" | "custom"` and `secretEnv`; `pitfall.raw-body` is defined as a validly signed, non-canonically serialised body that must be accepted.
+
+**D-18 — `result` is `unknown` inside `ensures` guards.** (Consequence of D-1; probed with `tsc`.) Typing it as `O` (the `run` return type) fixes `O` to `unknown` when an `ensures` guard precedes `run` in the object literal, because TypeScript assigns contextual parameter types with the fixing mapper; `NoInfer<O>` does not prevent fixing. Guards narrow `result` or use `e.result()`; typed results are the job of tier 1.
+
+**D-19 — Actor fixtures are project-named with a mandatory `anonymous`; no `test.db: "pglite" | "testcontainers"`.** (R2 important 6, partially rejected.) R2 asked for `Record<"anonymous" | "member" | "otherTeamAdmin" | "admin", …>`; those are the reference app's roles, not Averr's. `actors: Record<string, ActorFixture>` with `anonymous: { actor: null }` required; fixtures carry `headers` so the app's own auth middleware produces the actor (R1 blocking 5c). The test database is an env var (D-6), not a mode switch.
+
+**D-20 — Adapter default input gives path params precedence.** (R1 important 10, modified.) The review suggested `{ ...params, ...(GET ? query : body) }`; Averr uses `{ ...(GET ? query : body), ...params }` so a body cannot override a route-identified resource id (`teamId`). Default status 200; `Date` → ISO, `Decimal`/`BigInt` → string.
+
+**D-21 — `find.limit` max is 30; `overview.agentBlock` renamed `quickstart`; `find` hit `path` typed.** (R2 nits 3, 4, 10.) Hits are ~80 chars; above ~35 the budget always truncates.
+
+**D-22 — `averr fmt` is check-only in V0 (A1005).** (R1 nit 11.) Rewriting object keys in TypeScript source (comments, trailing commas) is over-scoped; reordering is Stage 2. Clause order inside `requires`/`ensures` is never checked (R2 nit 9).
+
+**D-23 — MCP inputs are root `z.object`s; `impact` accepts `{}` for "uncommitted edits".** (R1 blocking 12, R2 important 5.) `z.toJSONSchema` of a root union yields `anyOf`, which MCP clients reject.
+
+**D-24 — Id-derived file names use `encodeURIComponent(id)`.** (R1 important 15.) Ids contain `:` (illegal on Windows) and `/` (creates directories). Chosen over `:`→`__`, `/`→`~` because it is reversible without reserving characters.
+
+**D-25 — Packaging requirement recorded, manifests unchanged.** (R1 important 16.) `tsc -b` to `dist/`, `exports` to `.js`/`.d.ts`, and the devDependencies `averr init` must add are specified in ARCHITECTURE §7; editing package manifests is out of this task's scope and belongs to the first implementation PR per package.
+
+**D-26 — No text-search mode on `find`.** (R2 important 13, alternative chosen.) A ripgrep passthrough would be a second search tool with its own budget; agents already have grep. The agent block and SPEC-MCP §6.2 say explicitly what `find` covers and when to grep.
+
+**D-27 — `Path` keeps root autocomplete: `RefPath | (string & {})`.** (R1 important 1 asked to delete the dead template-literal members or type `e` per action; R2 important 10 asked for `RefPath | (string & {})`.) The R2 form keeps editor autocomplete for the five roots without collapsing to `string`; per-action typing of `e` would change the API shape. The deviation from FINAL §4 ("tsc checks field names") is stated in SPEC-CONTRACTS §2; the compiler checks fields (A3002/A3003/A3010).
+
+**D-28 — Ref-shaped string literals on the rhs are a type error (`NoRefString`) and A3007.** (R2 blocking 3.) Implemented as `rhs: R & NoRefString<R>` so `R` still infers from the argument; probed with `tsc`.
+
+**D-29 — `policy`/`public` are separate overloads so `actor` nullability is honest.** (Consequence of D-4.) `actor: Actor` under a policy and `Actor | null` when public, in `run`, guards and adapters. `AnyActionDecl`/`AnyQueryDecl` use `any` for the contravariant slots, as tRPC-style libraries do; `run` is declared with method syntax so specific declarations stay assignable to the erased forms.
+
+**D-30 — README example updated; ROADMAP and JOURNEY left as written.** README's twenty-line example used `model:` and `guard(...)`, which no longer type-check, so it was brought in line (reads edges wording, 412 wording). JOURNEY describes the FINAL doc historically and is accurate; ROADMAP line 19 still lists `guard` among the core exports and should be updated in a follow-up (out of this task's file scope).
+
+**D-31 — `history` is bounded; `suggest` ranks by handler write count.** (R1 important 13.) ≤ 20 commits from `git log -- <file>`, snapshots reused, stop at 10 ops or 10 s, `truncated` reported. Undeclared Exposures have too few edges to rank by "edge traffic".
+
+**D-32 — Schema drift checks are mutual-assignability aliases, not `ZodType<T>` annotations on node schemas.** (R1 nit 5, modified.) Annotating each node schema as `z.ZodType<EntityNode>` breaks `z.discriminatedUnion`, which needs `ZodObject`s. `_SchemaDriftChecks` asserts `z.output<typeof XSchema>` and `X` are mutually assignable for all twelve node kinds; `NodeSchema` is then annotated `z.ZodType<Node>` without a cast.
+
+**D-33 — Rejected: single-verifier semantics kept at node level only (R1 important 2 option (b)).** Option (a) was chosen (D-9) because tools render node provenance, and "verified by route-match only" would be misread as fully verified.
+
+**D-34 — Rejected: `check` scope "affected" stays the default.** (R2 nit 5 asked for clarification, not a change.) Defined fallbacks: dirty tree → HEAD..working tree; clean tree → last-green..HEAD; no last green → `all`; an empty affected set is never silently green.

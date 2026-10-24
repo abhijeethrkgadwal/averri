@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.averr/
+*.tsbuildinfo
+.env
+*.log
+examples/seed-app/prisma/*.db
+examples/seed-app/prisma/*.db-journal
+bench/results/
+.DS_Store
