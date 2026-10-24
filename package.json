@@ -21,8 +21,12 @@
     "averr": "tsx packages/cli/src/bin.ts"
   },
   "devDependencies": {
+    "@prisma/client": "^6.19.3",
     "@types/express": "^5.0.6",
     "@types/node": "^20.19.43",
+    "@types/supertest": "^7.2.1",
+    "prisma": "^6.19.3",
+    "supertest": "^7.3.1",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9"
