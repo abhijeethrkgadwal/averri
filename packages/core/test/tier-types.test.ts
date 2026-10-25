@@ -1,7 +1,7 @@
 /**
  * Type-level contract of the declaration API (SPEC-CONTRACTS §1, §3; SPEC-DECLARATIONS §4, §6).
  * The assertions live in `typeAssertions`, which is type-checked by `tsc` (the root `typecheck`
- * script includes packages/* /test) and never called at runtime: @averr/core is types-only at this
+ * script includes packages/* /test) and never called at runtime: @averri/core is types-only at this
  * stage, so there is nothing to import. The single `it` exists so Vitest reports the file.
  */
 import { describe, expect, it } from "vitest";
@@ -133,7 +133,7 @@ export function typeAssertions(
   return [t1, t2, t3, inv, inOk, declaredMode, outTyped, observeMode, anyAction, decls, p, a, actorShape];
 }
 
-describe("@averr/core type contract", () => {
+describe("@averri/core type contract", () => {
   it("is checked by tsc; the assertion function is never invoked at runtime", () => {
     expect(typeof typeAssertions).toBe("function");
   });

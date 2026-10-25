@@ -18,5 +18,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - name: Generate the seed app's Prisma client
+        run: npm run db:generate -w @averri/seed-app
       - run: npm run typecheck
       - run: npm test
+        timeout-minutes: 30

@@ -1,0 +1,74 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+/// A team of users.
+model Team {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  tags        String[]
+  createdAt   DateTime     @default(now())
+  members     Membership[]
+  invitations Invitation[]
+  search      Unsupported("tsvector")?
+
+  @@map("teams")
+}
+
+model User {
+  id     String       @id @default(cuid())
+  email  String       @unique
+  name   String?
+  teams  Membership[]
+  tokens OAuthToken[]
+}
+
+model Membership {
+  teamId    String
+  userId    String
+  role      Role     @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@id([teamId, userId])
+}
+
+model Invitation {
+  id         String           @id @default(cuid())
+  teamId     String
+  email      String
+  role       Role
+  status     InvitationStatus @default(PENDING)
+  acceptedAt DateTime?
+  team       Team             @relation(fields: [teamId], references: [id])
+
+  @@unique([teamId, email])
+}
+
+model OAuthToken {
+  id      Int      @id @default(autoincrement())
+  userId  String
+  scopes  Role[]
+  secret  Bytes
+  weird   Mystery
+  user    User     @relation(fields: [userId], references: [id])
+}

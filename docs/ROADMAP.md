@@ -14,29 +14,29 @@ Scope: one ORM (Prisma), two routers (Hono, Express), one validator (Zod). No ge
 
 ### M1. Extract and declare
 
-- `@averr/ir`: node and edge types, three provenance levels, serializable contract AST, SQLite store under `.averr/`, build-at-two-commits diff.
-- `@averr/extract`: Prisma schema, Hono and Express static route registration (dynamic mounts become `Exposure` nodes with evidence), Zod schemas by reference.
-- `@averr/core`: `entity`, `policy`, `action`, `query`, `event`, `workflow`, `integration`, `e`, `db`, `guard`, with literal-union option types.
-- `@averr/compiler`: load declaration modules with ts-morph, lower to IR with source ranges, resolve declared routes against extracted ones, verify effects by scanning handlers for `tx.<model>` calls, emit structured diagnostics for the first ten codes with deterministic fixes.
+- `@averri/ir`: node and edge types, three provenance levels, serializable contract AST, SQLite store under `.averri/`, build-at-two-commits diff.
+- `@averri/extract`: Prisma schema, Hono and Express static route registration (dynamic mounts become `Exposure` nodes with evidence), Zod schemas by reference.
+- `@averri/core`: `entity`, `policy`, `action`, `query`, `event`, `workflow`, `integration`, `e`, `db`, `guard`, with literal-union option types.
+- `@averri/compiler`: load declaration modules with ts-morph, lower to IR with source ranges, resolve declared routes against extracted ones, verify effects by scanning handlers for `tx.<model>` calls, emit structured diagnostics for the first ten codes with deterministic fixes.
 
-Demo: `averr check` on `examples/seed-app` reports a graph with counts by node kind, flags an exposed route with no policy, and proposes the sibling policy as the fix, with a patch.
+Demo: `averri check` on `examples/seed-app` reports a graph with counts by node kind, flags an exposed route with no policy, and proposes the sibling policy as the fix, with a patch.
 
 ### M2. Observe mode and generated tests
 
-- `@averr/contracts` observe mode: Vitest adapter wrapping the Hono app or Express router; `requires` and `ensures` evaluated from request and response bodies and DB before/after snapshots; test-time spy on the project's own emitter for `e.emitted`.
-- `@averr/testgen`: auth matrix (anonymous / member / other-tenant / admin), precondition boundary tests with a violating arbitrary per expression clause, fast-check postcondition properties, event emission counts, pitfall tests (`integration("Stripe", { webhook: { verify, rawBody } })` posts a signed raw body; idempotency as a duplicate-delivery test).
-- Generated tests written to `tests/averr/*.gen.test.ts` with `@generated` headers, content-hash writes, deletion when the node disappears.
-- Trace recorder: one trace per action invocation in test and dev, SQLite under `.averr/`, never the application database.
+- `@averri/contracts` observe mode: Vitest adapter wrapping the Hono app or Express router; `requires` and `ensures` evaluated from request and response bodies and DB before/after snapshots; test-time spy on the project's own emitter for `e.emitted`.
+- `@averri/testgen`: auth matrix (anonymous / member / other-tenant / admin), precondition boundary tests with a violating arbitrary per expression clause, fast-check postcondition properties, event emission counts, pitfall tests (`integration("Stripe", { webhook: { verify, rawBody } })` posts a signed raw body; idempotency as a duplicate-delivery test).
+- Generated tests written to `tests/averri/*.gen.test.ts` with `@generated` headers, content-hash writes, deletion when the node disappears.
+- Trace recorder: one trace per action invocation in test and dev, SQLite under `.averri/`, never the application database.
 
 Demo: the reference app's 30 actions carry declared contracts; `npm test` in the example runs the generated suite against pglite; breaking a `requires` turns exactly one generated test red and names the contract id.
 
 ### M3. Agent interface
 
-- `@averr/mcp`: `overview`, `find`, `inspect`, `impact`, `check`, `explain`, plus `read_source` and `suggest`; token budgets per tool; content-hash rebuild on every call with `commit` and `stale: false` on every response; construct docs as MCP resources (`averr://docs/<construct>`).
-- `@averr/cli`: `averr init` (detect stack, write config, write the CLAUDE.md / AGENTS.md / `.cursor/rules` block), `check`, `docs`, `fmt`, `suggest`, `mcp`, and `<tool> --json` mirrors.
-- `averr docs`: deterministic Markdown spec card per action, under 15 lines, with `verified` vs `opaque` per clause.
+- `@averri/mcp`: `overview`, `find`, `inspect`, `impact`, `check`, `explain`, plus `read_source` and `suggest`; token budgets per tool; content-hash rebuild on every call with `commit` and `stale: false` on every response; construct docs as MCP resources (`averri://docs/<construct>`).
+- `@averri/cli`: `averri init` (detect stack, write config, write the CLAUDE.md / AGENTS.md / `.cursor/rules` block), `check`, `docs`, `fmt`, `suggest`, `mcp`, and `<tool> --json` mirrors.
+- `averri docs`: deterministic Markdown spec card per action, under 15 lines, with `verified` vs `opaque` per clause.
 
-Demo (the V0 exit criterion): a Claude Code session on the reference app adds a policy-protected endpoint using only Averr tools; `check` reports which generated tests cover it; `impact` names the dependents. A non-engineer reviews the change from spec-card diffs alone.
+Demo (the V0 exit criterion): a Claude Code session on the reference app adds a policy-protected endpoint using only Averri tools; `check` reports which generated tests cover it; `impact` names the dependents. A non-engineer reviews the change from spec-card diffs alone.
 
 ### M4. Internal benchmark run
 
@@ -58,11 +58,11 @@ Gate (the kill criteria in BENCHMARK.md, verbatim): if B+ beats A by under 5 poi
 
 ## Stage 2: declared mode with derivation (only if the gate clears)
 
-Declarations gain `fields`, `paginate`, `filter`, `sort`, `tenant`; the compiler emits what the project already uses, not a second stack: Prisma schema fragments and migrations, Hono/Express routes, Zod schemas, OpenAPI, Inngest or pg-boss consumers for workflows. Generated files carry `@generated` headers; `averr check --clean` fails CI on drift; `averr eject` strips the headers and leaves a plain Prisma + Hono project, and that demo precedes the Stage 2 release. Benchmark arms C and D are added. None of this is designed in detail until the gate clears, on purpose.
+Declarations gain `fields`, `paginate`, `filter`, `sort`, `tenant`; the compiler emits what the project already uses, not a second stack: Prisma schema fragments and migrations, Hono/Express routes, Zod schemas, OpenAPI, Inngest or pg-boss consumers for workflows. Generated files carry `@generated` headers; `averri check --clean` fails CI on drift; `averri eject` strips the headers and leaves a plain Prisma + Hono project, and that demo precedes the Stage 2 release. Benchmark arms C and D are added. None of this is designed in detail until the gate clears, on purpose.
 
 ## After that
 
-A bespoke `.al` syntax as a third projection of the IR is a question for when (a) Stage 2 exists and (b) a public corpus of at least a few hundred Averr-annotated repos exists to teach it from. The project's own research says a new grammar before then pays the no-training-data tax in every context window forever. It is listed here so nobody has to ask whether it was forgotten.
+A bespoke `.al` syntax as a third projection of the IR is a question for when (a) Stage 2 exists and (b) a public corpus of at least a few hundred Averri-annotated repos exists to teach it from. The project's own research says a new grammar before then pays the no-training-data tax in every context window forever. It is listed here so nobody has to ask whether it was forgotten.
 
 Other items that are explicitly after V0 and not scheduled: a NestJS extractor; a Python/FastAPI extractor; a Drizzle extractor; production-trace export via OpenTelemetry (opt-in); counterfactual replay and failing-sequence minimisation in `explain`; mining agent interaction logs to propose new primitives.
 
@@ -79,7 +79,7 @@ These are not "later." They are things the project has decided not to be, and a 
 - **Cascade root-cause analysis.** Cascade collapse is a diff-scoped heuristic and is described as one.
 - **Confidence scores on fixes.** Fixes carry an `evidence` string. Fixes are offered only for codes whose repair is deterministic.
 - **Generated application code in V0.** Tests, OpenAPI, and spec cards are derived; routes, schemas, and handlers are not, until the benchmark earns it.
-- **A commercial plan inside this repository.** The research round designed Team and Enterprise tiers and a closed PR-bot server for a company that was not founded. This repo has no tiers. Everything here is Apache-2.0 and will stay that way. If someone later builds a hosted service on top of Averr, that is their project.
+- **A commercial plan inside this repository.** The research round designed Team and Enterprise tiers and a closed PR-bot server for a company that was not founded. This repo has no tiers. Everything here is Apache-2.0 and will stay that way. If someone later builds a hosted service on top of Averri, that is their project.
 - **Supporting every stack.** One ORM, two routers, one validator in V0. Breadth is how a small project becomes a shallow one.
 
 ## How this document changes

@@ -1,5 +1,5 @@
 /**
- * @averr/ir — the Semantic IR.
+ * @averri/ir — the Semantic IR.
  *
  * This file is the normative TypeScript form of docs/SPEC-IR.md, SPEC-CONTRACTS.md
  * (AST section) and SPEC-DIAGNOSTICS.md. Every other package consumes these types;
@@ -12,11 +12,11 @@
  * - All file paths are repo-relative, POSIX separators, no leading "./".
  * - Lines are 1-based, columns are 0-based (see {@link Position}). ts-morph's
  *   `getLineAndColumnAtPos` returns BOTH 1-based; every extractor subtracts 1 from the column.
- * - The graph is a pure function of (repository content, averr version). It is a cache,
+ * - The graph is a pure function of (repository content, averri version). It is a cache,
  *   never committed, never hand-edited.
- * - "Schema facts" means what `@averr/extract` derives from `schema.prisma` with
+ * - "Schema facts" means what `@averri/extract` derives from `schema.prisma` with
  *   `@mrleebo/prisma-ast` (models, fields, types, `?`, `[]`, `@id`/`@@id`, `@unique`/`@@unique`,
- *   `@default`, `@relation(fields, references)`, enums, `Unsupported`). Averr does not use
+ *   `@default`, `@relation(fields, references)`, enums, `Unsupported`). Averri does not use
  *   Prisma's DMMF or `@prisma/internals`.
  */
 
@@ -85,7 +85,7 @@ export type NodeKind = (typeof NODE_KINDS)[number];
  * MUST NOT start with `$` (A1004).
  *
  * Ids are not file-safe (`:` is illegal on Windows, `/` creates directories). Every id-derived
- * path under `.averr/` uses `encodeURIComponent(id)` (helper `nodeIdToFileName` in @averr/ir).
+ * path under `.averri/` uses `encodeURIComponent(id)` (helper `nodeIdToFileName` in @averri/ir).
  */
 export type NodeId = `${NodeKind}:${string}`;
 
@@ -105,7 +105,7 @@ export type ModuleId = `Module:${string}`;
 
 /**
  * Diagnostic ids are per-build sequence numbers: `D-0001`, `D-0002`, ... They are not stable across
- * builds. `check` persists its diagnostics in `.averr/last-check.json` so `explain {diagId}` can
+ * builds. `check` persists its diagnostics in `.averri/last-check.json` so `explain {diagId}` can
  * resolve them until the next build changes the content hash (SPEC-MCP §6.6).
  */
 export type DiagnosticId = `D-${string}`;
@@ -135,7 +135,7 @@ export interface SymbolRef {
 /**
  * Provenance level of a node or edge.
  * - extracted: produced by a heuristic extractor from code or schema. MUST carry evidence and a confidence.
- * - declared:  written by a human or agent through the @averr/core declaration API.
+ * - declared:  written by a human or agent through the @averri/core declaration API.
  * - verified:  a declaration that EVERY applicable static verifier confirmed against handler/route/schema code
  *              (e.g. a declared `writes` matched a `tx.invitation.*` call in `run`). See {@link VerifierId}.
  */
@@ -321,8 +321,8 @@ export type DbWhereOperand = Ref | Lit | LenExpr;
 /**
  * Literal where-clause over a Prisma model in CANONICAL FLAT FORM: keys are dotted field paths
  * through to-one relations (depth <= 3), e.g. `"user.email"`. This is the only representation:
- * the `db.*` builder in @averr/core flattens nested source objects, so the runtime value, the IR and
- * the test generator all see the same shape. `@averr/contracts` un-flattens into Prisma's nested
+ * the `db.*` builder in @averri/core flattens nested source objects, so the runtime value, the IR and
+ * the test generator all see the same shape. `@averri/contracts` un-flattens into Prisma's nested
  * `where` while substituting refs.
  *
  * Relation rules: a dotted key may traverse only to-one relations. A segment that crosses a
@@ -640,7 +640,7 @@ export interface IntegrationNode extends NodeBase {
     exposure: ExposureId | null;
   } | null;
   idempotency: IdempotencySpec | null;
-  /** Calls to this integration must not happen inside a Averr-owned transaction (A4005, checked by effect-scan). */
+  /** Calls to this integration must not happen inside a Averri-owned transaction (A4005, checked by effect-scan). */
   nonTransactional: boolean;
 }
 
@@ -815,7 +815,7 @@ export interface HealthCounters {
 
 export interface GraphMeta {
   schemaVersion: typeof GRAPH_SCHEMA_VERSION;
-  averrVersion: string;
+  averriVersion: string;
   /** ISO-8601 UTC. */
   builtAt: string;
   /** HEAD commit sha, or null outside git. */
@@ -895,7 +895,7 @@ export interface CauseLink {
  * A proposed fix. Only diagnostics whose code has `deterministicFix: true` MAY carry fixes.
  * `evidence` is a sentence, never a confidence number. At least one of `patch` (a unified diff against
  * the working tree, applicable with `git apply`, <= 4 000 chars, excluded from the 300-token budget)
- * or `command` (a shell command that performs the fix, e.g. `averr testgen --only Test:gen/...`) MUST be present.
+ * or `command` (a shell command that performs the fix, e.g. `averri testgen --only Test:gen/...`) MUST be present.
  */
 export interface Fix {
   label: string;
@@ -904,7 +904,7 @@ export interface Fix {
   command?: string;
 }
 
-export type DocsUri = `averr://docs/${string}`;
+export type DocsUri = `averri://docs/${string}`;
 
 export interface Diagnostic {
   id: DiagnosticId;
@@ -925,7 +925,7 @@ export interface Diagnostic {
   fixes: Fix[];
   /** Summary of the graph diff since the last green `check`, e.g. "+1 action, +1 route". Null when no green build is recorded. */
   since_last_green: string | null;
-  /** MCP resource URI of the construct's semantics card, e.g. `averr://docs/policy`. */
+  /** MCP resource URI of the construct's semantics card, e.g. `averri://docs/policy`. */
   docs: DocsUri | null;
 }
 
@@ -950,43 +950,43 @@ export interface DiagnosticCodeInfo {
  *   A2107 is RESERVED for the Stage 2 tenant-key check ("Policy does not constrain tenant key").
  */
 export const DIAGNOSTIC_CODES = {
-  A1001: { code: "A1001", severity: "error", title: "Duplicate declaration id", deterministicFix: false, docs: "averr://docs/identity" },
-  A1002: { code: "A1002", severity: "warning", title: "Declaration renamed (same run/handler reference, new id)", deterministicFix: false, docs: "averr://docs/identity" },
-  A1003: { code: "A1003", severity: "error", title: "Unknown Prisma model", deterministicFix: false, docs: "averr://docs/entity" },
-  A1004: { code: "A1004", severity: "error", title: "Declaration option is not statically analysable", deterministicFix: false, docs: "averr://docs/identity" },
-  A1005: { code: "A1005", severity: "warning", title: "Declaration keys out of canonical order", deterministicFix: false, docs: "averr://docs/identity" },
-  A2101: { code: "A2101", severity: "error", title: "Declared route has no matching exposure", deterministicFix: true, docs: "averr://docs/action" },
-  A2103: { code: "A2103", severity: "error", title: "Exposed route has no policy", deterministicFix: true, docs: "averr://docs/policy" },
-  A2104: { code: "A2104", severity: "warning", title: "Exposure has no declaration", deterministicFix: false, docs: "averr://docs/action" },
-  A2105: { code: "A2105", severity: "error", title: "Exposed declared-mode action has no intent", deterministicFix: false, docs: "averr://docs/action" },
-  A2106: { code: "A2106", severity: "warning", title: "Policy is an opaque guard; auth matrix not derivable", deterministicFix: false, docs: "averr://docs/policy" },
-  A3001: { code: "A3001", severity: "error", title: "self/old reference without a subject", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3002: { code: "A3002", severity: "error", title: "Contract references unknown field", deterministicFix: true, docs: "averr://docs/contracts" },
-  A3003: { code: "A3003", severity: "error", title: "Reference root or form not allowed in this phase", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3004: { code: "A3004", severity: "error", title: "Reference path deeper than 3 segments", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3005: { code: "A3005", severity: "warning", title: "Guard could be an expression or predicate", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3006: { code: "A3006", severity: "error", title: "Zod input field drifts from Prisma field type", deterministicFix: true, docs: "averr://docs/entity" },
-  A3007: { code: "A3007", severity: "error", title: "Literal string on the right of a comparison looks like a reference", deterministicFix: true, docs: "averr://docs/contracts" },
-  A3008: { code: "A3008", severity: "error", title: "Operator not applicable to operand type", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3009: { code: "A3009", severity: "error", title: "where path crosses a list relation or nests a db predicate", deterministicFix: false, docs: "averr://docs/contracts" },
-  A3010: { code: "A3010", severity: "error", title: "Reference root looks misspelled", deterministicFix: true, docs: "averr://docs/contracts" },
-  A4001: { code: "A4001", severity: "error", title: "Emitted event is not declared", deterministicFix: true, docs: "averr://docs/event" },
-  A4002: { code: "A4002", severity: "warning", title: "Declared effects differ from verified effects", deterministicFix: true, docs: "averr://docs/action" },
-  A4003: { code: "A4003", severity: "warning", title: "Event has no consumer", deterministicFix: false, docs: "averr://docs/event" },
-  A4004: { code: "A4004", severity: "error", title: "Query handler writes to the database", deterministicFix: false, docs: "averr://docs/query" },
-  A4005: { code: "A4005", severity: "error", title: "Integration called inside a Averr-owned transaction", deterministicFix: false, docs: "averr://docs/integration" },
-  A5001: { code: "A5001", severity: "warning", title: "Webhook route appears to parse body before signature verification", deterministicFix: false, docs: "averr://docs/integration" },
-  A5002: { code: "A5002", severity: "warning", title: "Webhook or payment handler has no idempotency", deterministicFix: false, docs: "averr://docs/integration" },
-  A6001: { code: "A6001", severity: "warning", title: "Generated test is stale", deterministicFix: true, docs: "averr://docs/tests" },
-  A7001: { code: "A7001", severity: "info", title: "Extracted node below confidence threshold", deterministicFix: false, docs: "averr://docs/graph" },
-  A9001: { code: "A9001", severity: "error", title: "TypeScript error (tsc backstop, cascade-collapsed)", deterministicFix: false, docs: "averr://docs/check" },
-  A9002: { code: "A9002", severity: "error", title: "Test failed", deterministicFix: false, docs: "averr://docs/check" },
+  A1001: { code: "A1001", severity: "error", title: "Duplicate declaration id", deterministicFix: false, docs: "averri://docs/identity" },
+  A1002: { code: "A1002", severity: "warning", title: "Declaration renamed (same run/handler reference, new id)", deterministicFix: false, docs: "averri://docs/identity" },
+  A1003: { code: "A1003", severity: "error", title: "Unknown Prisma model", deterministicFix: false, docs: "averri://docs/entity" },
+  A1004: { code: "A1004", severity: "error", title: "Declaration option is not statically analysable", deterministicFix: false, docs: "averri://docs/identity" },
+  A1005: { code: "A1005", severity: "warning", title: "Declaration keys out of canonical order", deterministicFix: false, docs: "averri://docs/identity" },
+  A2101: { code: "A2101", severity: "error", title: "Declared route has no matching exposure", deterministicFix: true, docs: "averri://docs/action" },
+  A2103: { code: "A2103", severity: "error", title: "Exposed route has no policy", deterministicFix: true, docs: "averri://docs/policy" },
+  A2104: { code: "A2104", severity: "warning", title: "Exposure has no declaration", deterministicFix: false, docs: "averri://docs/action" },
+  A2105: { code: "A2105", severity: "error", title: "Exposed declared-mode action has no intent", deterministicFix: false, docs: "averri://docs/action" },
+  A2106: { code: "A2106", severity: "warning", title: "Policy is an opaque guard; auth matrix not derivable", deterministicFix: false, docs: "averri://docs/policy" },
+  A3001: { code: "A3001", severity: "error", title: "self/old reference without a subject", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3002: { code: "A3002", severity: "error", title: "Contract references unknown field", deterministicFix: true, docs: "averri://docs/contracts" },
+  A3003: { code: "A3003", severity: "error", title: "Reference root or form not allowed in this phase", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3004: { code: "A3004", severity: "error", title: "Reference path deeper than 3 segments", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3005: { code: "A3005", severity: "warning", title: "Guard could be an expression or predicate", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3006: { code: "A3006", severity: "error", title: "Zod input field drifts from Prisma field type", deterministicFix: true, docs: "averri://docs/entity" },
+  A3007: { code: "A3007", severity: "error", title: "Literal string on the right of a comparison looks like a reference", deterministicFix: true, docs: "averri://docs/contracts" },
+  A3008: { code: "A3008", severity: "error", title: "Operator not applicable to operand type", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3009: { code: "A3009", severity: "error", title: "where path crosses a list relation or nests a db predicate", deterministicFix: false, docs: "averri://docs/contracts" },
+  A3010: { code: "A3010", severity: "error", title: "Reference root looks misspelled", deterministicFix: true, docs: "averri://docs/contracts" },
+  A4001: { code: "A4001", severity: "error", title: "Emitted event is not declared", deterministicFix: true, docs: "averri://docs/event" },
+  A4002: { code: "A4002", severity: "warning", title: "Declared effects differ from verified effects", deterministicFix: true, docs: "averri://docs/action" },
+  A4003: { code: "A4003", severity: "warning", title: "Event has no consumer", deterministicFix: false, docs: "averri://docs/event" },
+  A4004: { code: "A4004", severity: "error", title: "Query handler writes to the database", deterministicFix: false, docs: "averri://docs/query" },
+  A4005: { code: "A4005", severity: "error", title: "Integration called inside a Averri-owned transaction", deterministicFix: false, docs: "averri://docs/integration" },
+  A5001: { code: "A5001", severity: "warning", title: "Webhook route appears to parse body before signature verification", deterministicFix: false, docs: "averri://docs/integration" },
+  A5002: { code: "A5002", severity: "warning", title: "Webhook or payment handler has no idempotency", deterministicFix: false, docs: "averri://docs/integration" },
+  A6001: { code: "A6001", severity: "warning", title: "Generated test is stale", deterministicFix: true, docs: "averri://docs/tests" },
+  A7001: { code: "A7001", severity: "info", title: "Extracted node below confidence threshold", deterministicFix: false, docs: "averri://docs/graph" },
+  A9001: { code: "A9001", severity: "error", title: "TypeScript error (tsc backstop, cascade-collapsed)", deterministicFix: false, docs: "averri://docs/check" },
+  A9002: { code: "A9002", severity: "error", title: "Test failed", deterministicFix: false, docs: "averri://docs/check" },
 } as const satisfies Record<string, DiagnosticCodeInfo>;
 
 export type DiagnosticCode = keyof typeof DIAGNOSTIC_CODES;
 
 // ---------------------------------------------------------------------------
-// 10. Zod schemas (zod 4) for validating the .averr/graph.json cache and tool output
+// 10. Zod schemas (zod 4) for validating the .averri/graph.json cache and tool output
 // ---------------------------------------------------------------------------
 
 const nodeIdRe = new RegExp(`^(${NODE_KINDS.join("|")}):.+$`);
@@ -1343,7 +1343,7 @@ export const EdgeSchema: z.ZodType<Edge> = z.object({
 
 export const DiagnosticCodeSchema = z.enum(Object.keys(DIAGNOSTIC_CODES) as [DiagnosticCode, ...DiagnosticCode[]]);
 
-const docsUri = z.string().regex(/^averr:\/\/docs\/[a-z][a-z0-9-]*$/) as unknown as z.ZodType<DocsUri>;
+const docsUri = z.string().regex(/^averri:\/\/docs\/[a-z][a-z0-9-]*$/) as unknown as z.ZodType<DocsUri>;
 
 export const FixSchema: z.ZodType<Fix> = z
   .object({ label: z.string(), evidence: z.string(), patch: z.string().max(4000).optional(), command: z.string().optional() })
@@ -1399,7 +1399,7 @@ const countsShape = Object.fromEntries(NODE_KINDS.map((k) => [k, z.number().int(
 
 export const GraphMetaSchema: z.ZodType<GraphMeta> = z.object({
   schemaVersion: z.literal(GRAPH_SCHEMA_VERSION),
-  averrVersion: z.string(),
+  averriVersion: z.string(),
   builtAt: z.string(),
   commit: z.string().nullable(),
   dirty: z.boolean(),

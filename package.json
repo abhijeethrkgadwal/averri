@@ -1,8 +1,8 @@
 {
-  "name": "averr-monorepo",
+  "name": "averri-monorepo",
   "private": true,
   "version": "0.0.1",
-  "description": "Averr: a contract and semantic-graph layer for agent-written TypeScript backends (the project that started as AgentLang)",
+  "description": "Averri: a contract and semantic-graph layer for agent-written TypeScript backends (the project that started as AgentLang)",
   "license": "Apache-2.0",
   "type": "module",
   "workspaces": [
@@ -18,7 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "averr": "tsx packages/cli/src/bin.ts"
+    "averri": "tsx packages/cli/src/bin.ts"
   },
   "devDependencies": {
     "@prisma/client": "^6.19.3",

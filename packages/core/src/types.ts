@@ -1,21 +1,21 @@
 /**
- * @averr/core — public declaration API surface (types only).
+ * @averri/core — public declaration API surface (types only).
  *
  * This file defines what a user (human or agent) sees when they write
- * `import { entity, policy, action, query, event, workflow, integration, e, db } from "@averr/core"`
- * and `import { defineConfig } from "@averr/core"`.
+ * `import { entity, policy, action, query, event, workflow, integration, e, db } from "@averri/core"`
+ * and `import { defineConfig } from "@averri/core"`.
  * It contains NO runtime. The runtime implementation lives in `index.ts` (later task) and in
- * `@averr/contracts`; both MUST conform to these types.
+ * `@averri/contracts`; both MUST conform to these types.
  *
  * Design rules (see docs/SPEC-DECLARATIONS.md):
  * - Seven constructs plus two builders, one spelling each, no sugar, no string mini-DSLs.
  * - Every option whose value set is closed is a literal union so tsc rejects hallucinated values.
- * - Contracts are built with `e.*` / `db.*` into the serializable AST from `@averr/ir`; a bare
+ * - Contracts are built with `e.*` / `db.*` into the serializable AST from `@averri/ir`; a bare
  *   async function `(ctx) => boolean` is the only opaque escape hatch (tier "guard") and is
  *   distinguishable from analysable clauses by type (`typeof clause === "function"`).
- * - The project's own Prisma client is used in handlers; Averr never wraps data access.
+ * - The project's own Prisma client is used in handlers; Averri never wraps data access.
  * - Declarations are LOWERED STATICALLY by the compiler with ts-morph. Nothing in this module has
- *   import-time side effects, and the compiler never imports @averr/core or evaluates user modules.
+ *   import-time side effects, and the compiler never imports @averri/core or evaluates user modules.
  */
 
 import type { z } from "zod";
@@ -38,23 +38,23 @@ import type {
   RouteSpec,
   WebhookScheme,
   WorkflowEngine,
-} from "@averr/ir";
+} from "@averri/ir";
 
-export type { Effect, HttpMethod, RouteSpec, PayloadType, WorkflowEngine, RetrySpec, IdempotencySpec, WebhookScheme } from "@averr/ir";
+export type { Effect, HttpMethod, RouteSpec, PayloadType, WorkflowEngine, RetrySpec, IdempotencySpec, WebhookScheme } from "@averri/ir";
 
 // ---------------------------------------------------------------------------
 // 1. Project-provided types (module augmentation)
 // ---------------------------------------------------------------------------
 
 /**
- * Augment this interface from your project to type `actor`, `tx` and model names. `averr init`
- * writes this block to `src/averr.d.ts`; the worked examples in the specs ASSUME it exists
+ * Augment this interface from your project to type `actor`, `tx` and model names. `averri init`
+ * writes this block to `src/averri.d.ts`; the worked examples in the specs ASSUME it exists
  * (`actor.orgId` is otherwise `unknown`).
  *
  * ```ts
  * import type { PrismaClient, Prisma } from "@prisma/client";
- * declare module "@averr/core" {
- *   interface AverrTypes {
+ * declare module "@averri/core" {
+ *   interface AverriTypes {
  *     Actor: { id: string; orgId: string; role: "owner" | "admin" | "member" };
  *     PrismaClient: PrismaClient;
  *     TransactionClient: Prisma.TransactionClient;
@@ -65,11 +65,11 @@ export type { Effect, HttpMethod, RouteSpec, PayloadType, WorkflowEngine, RetryS
  * Without augmentation every slot falls back to a permissive default so the library works on day one.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface AverrTypes {}
+export interface AverriTypes {}
 
-type Slot<K extends string, Default> = K extends keyof AverrTypes ? AverrTypes[K] : Default;
+type Slot<K extends string, Default> = K extends keyof AverriTypes ? AverriTypes[K] : Default;
 
-/** The authenticated principal. Default shape has only `id`; augment `AverrTypes.Actor` for more. */
+/** The authenticated principal. Default shape has only `id`; augment `AverriTypes.Actor` for more. */
 export type Actor = Slot<"Actor", { id: string; [key: string]: unknown }>;
 
 /** The project's Prisma client (non-transactional). */
@@ -290,7 +290,7 @@ export type WhereInput = {
  * Closed set of declarative DB predicates over Prisma models. Each compiles to one Prisma
  * `count` at runtime and to a fixture generator in tests. Refs inside `where` follow the
  * same phase rules as expressions. A ref that evaluates to `undefined` makes the predicate false
- * (or `countWhere` 0): Averr never lets Prisma drop a filter (SPEC-CONTRACTS §5).
+ * (or `countWhere` 0): Averri never lets Prisma drop a filter (SPEC-CONTRACTS §5).
  */
 export interface DbPredicateBuilder {
   /** At least one row matches. */
@@ -429,7 +429,7 @@ export type TransactionOptions = boolean | { timeout?: number; maxWait?: number 
 export interface ActionOptionsBase<I extends InputSchema, A extends Actor | null> extends CommonOptions {
   /**
    * HTTP route this action is served at. MUST match an existing Hono/Express registration
-   * (A2101); Averr never generates routes in V0. Optional in declared mode (internal actions),
+   * (A2101); Averri never generates routes in V0. Optional in declared mode (internal actions),
    * required in observe mode.
    */
   route?: RouteSpec;
@@ -490,7 +490,7 @@ export interface DeclaredActionOptions<I extends InputSchema, O, A extends Actor
 
 /**
  * A reference to an existing framework handler (Hono `(c) => ...` or Express `(req, res, next) => ...`).
- * Averr never calls it: it is used ONLY by `effect-scan`, handler line counting and the A2101 fix.
+ * Averri never calls it: it is used ONLY by `effect-scan`, handler line counting and the A2101 fix.
  * Interception happens at the fetch boundary by route matching (SPEC-DECLARATIONS §6).
  */
 export type HandlerRef = (...args: never[]) => unknown;
@@ -505,7 +505,7 @@ export interface ObserveActionOptions<I extends InputSchema, A extends Actor | n
    */
   handler?: HandlerRef;
   run?: never;
-  /** Not available in observe mode: Averr does not own the transaction. */
+  /** Not available in observe mode: Averri does not own the transaction. */
   transaction?: never;
 }
 
@@ -588,7 +588,7 @@ export interface WorkflowOptions extends CommonOptions {
   on: EventDecl;
   /**
    * The runner object from the project's durable-execution library (an Inngest function, a pg-boss
-   * handler registration, ...). Averr never executes it; the compiler resolves the identifier to a
+   * handler registration, ...). Averri never executes it; the compiler resolves the identifier to a
    * SymbolRef and scans the referenced source for `step.run("name", ...)`.
    */
   runner: object;
@@ -623,7 +623,7 @@ export interface IntegrationOptions extends CommonOptions {
   client?: object;
   webhook?: WebhookOptions;
   idempotency?: IdempotencySpec;
-  /** True when calls MUST NOT happen inside a Averr-owned transaction (A4005). Default true. */
+  /** True when calls MUST NOT happen inside a Averri-owned transaction (A4005). Default true. */
   nonTransactional?: boolean;
   /** Default `["network"]`. */
   effects?: readonly Effect[];
@@ -694,12 +694,12 @@ export interface DeclarationApi {
 }
 
 // ---------------------------------------------------------------------------
-// 9. Project configuration (`averr.config.ts`)
+// 9. Project configuration (`averri.config.ts`)
 // ---------------------------------------------------------------------------
 
 /**
  * One actor fixture for generated tests and the observe adapter. `headers` are sent with every request
- * made as this fixture (the app's own auth middleware turns them into the actor); `actor` is what Averr
+ * made as this fixture (the app's own auth middleware turns them into the actor); `actor` is what Averri
  * uses to evaluate policies and `actor.*` refs. The fixture named `anonymous` MUST exist with `actor: null`.
  * Fixture names are project-defined; the reference app uses `anonymous`, `member`, `otherTeamAdmin`, `admin`.
  */
@@ -713,18 +713,18 @@ export interface EmitterConfig {
   publish(name: string, payload: Record<string, unknown>): void | Promise<void>;
   /** Observe mode: the method on the project's emitter client to spy on (`{ target: inngest, method: "send" }`). */
   spy: { target: object; method: string };
-  /** Prefix of the project's event names, e.g. `"averr/"`. Used by `publish`, by the spy and by `consumer-scan` (statically). */
+  /** Prefix of the project's event names, e.g. `"averri/"`. Used by `publish`, by the spy and by `consumer-scan` (statically). */
   eventNamePrefix: string;
 }
 
 /**
- * Resolved configuration. `averr.config.ts` default-exports `defineConfig({...})`. The compiler lowers
+ * Resolved configuration. `averri.config.ts` default-exports `defineConfig({...})`. The compiler lowers
  * the STATIC fields it needs (`sourceRoots`, `prismaSchema`, `prismaClient`, `entryPoints`, `publicMarker`,
  * `authMiddleware`, `emitter.eventNamePrefix`, fixture names, `test`) with ts-morph under the same
- * analysable-subset rule as declarations (A1004); it never imports the file. `@averr/contracts` imports
+ * analysable-subset rule as declarations (A1004); it never imports the file. `@averri/contracts` imports
  * it at test time (observe adapter) and at runtime (declared mode) for the function-valued fields.
  */
-export interface AverrConfig {
+export interface AverriConfig {
   /** Directories scanned for TypeScript. Default `["src"]`. */
   sourceRoots: string[];
   /** Default `"prisma/schema.prisma"`. */
@@ -746,30 +746,30 @@ export interface AverrConfig {
   test: {
     /** Env var with the TEST database URL the project supplies. Default `"DATABASE_URL"`. No pglite in V0. */
     databaseUrlEnv: string;
-    /** Where generated tests are written. Default `"tests/averr"`. */
+    /** Where generated tests are written. Default `"tests/averri"`. */
     generatedDir: string;
   };
 }
 
 /** What the user writes; everything with a documented default is optional. */
-export interface AverrConfigInput {
+export interface AverriConfigInput {
   sourceRoots?: string[];
   prismaSchema?: string;
   prismaClient?: { file: string; symbol: string };
   entryPoints: string[];
-  actors: AverrConfig["actors"];
+  actors: AverriConfig["actors"];
   emitter?: EmitterConfig;
   publicMarker?: string;
   authMiddleware?: string[];
-  sampling?: Partial<AverrConfig["sampling"]>;
-  test?: Partial<AverrConfig["test"]>;
+  sampling?: Partial<AverriConfig["sampling"]>;
+  test?: Partial<AverriConfig["test"]>;
 }
 
-/** Fills defaults and freezes. Exported from `@averr/core`. */
-export type DefineConfig = (input: AverrConfigInput) => AverrConfig;
+/** Fills defaults and freezes. Exported from `@averri/core`. */
+export type DefineConfig = (input: AverriConfigInput) => AverriConfig;
 
 // ---------------------------------------------------------------------------
-// 10. Runtime-facing shapes shared by @averr/contracts, @averr/testgen and @averr/mcp
+// 10. Runtime-facing shapes shared by @averri/contracts, @averri/testgen and @averri/mcp
 // ---------------------------------------------------------------------------
 
 /**
@@ -814,7 +814,7 @@ export interface ContractViolationBody {
 
 /**
  * One recorded trace per action invocation (test and dev). Appended as one JSON line to
- * `.averr/traces/<YYYY-MM-DD>.<pid>.jsonl` (one file per process because Vitest workers append concurrently).
+ * `.averri/traces/<YYYY-MM-DD>.<pid>.jsonl` (one file per process because Vitest workers append concurrently).
  */
 export interface ActionTrace {
   traceId: string;
@@ -853,7 +853,7 @@ export type PhaseRecord =
       ok: boolean;
       policy: string | null;
       decision: "allow" | "deny" | "public" | "unauthenticated";
-      /** True in observe mode: the decision is the app's own 401/403, not a Averr evaluation. */
+      /** True in observe mode: the decision is the app's own 401/403, not a Averri evaluation. */
       observed: boolean;
     }
   | {
@@ -868,7 +868,7 @@ export type PhaseRecord =
   | { phase: "run"; ok: boolean; durationMs: number; dbCalls: number; error?: string }
   | { phase: "emit"; ok: boolean; events: Array<{ event: EventId; payloadHash: string }>; error?: string };
 
-// --- declared-mode adapters (implemented by @averr/contracts) ---
+// --- declared-mode adapters (implemented by @averri/contracts) ---
 
 /** Actor type of a declaration (`Actor` or `Actor | null`). */
 export type ActorOf<D> = D extends { readonly __types?: { actor: infer A } } ? A : never;
@@ -905,7 +905,7 @@ export interface DeclaredRuntime {
   ): (req: Req, res: Res, next: (err?: unknown) => void) => Promise<void>;
 }
 
-// --- observe mode (Vitest only; implemented by @averr/contracts) ---
+// --- observe mode (Vitest only; implemented by @averri/contracts) ---
 
 /** A Hono app (anything with `fetch(Request)`). */
 export type FetchApp = { fetch(request: Request, ...rest: never[]): Response | Promise<Response> };
@@ -914,7 +914,7 @@ export type ListenerApp = (req: never, res: never) => void;
 
 export interface ObserveOptions {
   declarations: readonly Declaration[];
-  config: AverrConfig;
+  config: AverriConfig;
 }
 
 export interface ObserveRequest {
@@ -941,5 +941,5 @@ export interface ObserveApi {
   observe(app: FetchApp | ListenerApp, options: ObserveOptions): Promise<ObserveHandle>;
 }
 
-/** Re-exported AST building blocks so consumers can type the `ast` fields without importing @averr/ir directly. */
+/** Re-exported AST building blocks so consumers can type the `ast` fields without importing @averri/ir directly. */
 export type { BoolExpr, Operand, Ref, DbWhere };

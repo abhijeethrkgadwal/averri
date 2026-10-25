@@ -1,7 +1,7 @@
 {
-  "name": "@averr/ir",
+  "name": "@averri/ir",
   "version": "0.0.1",
-  "description": "Averr ir package",
+  "description": "Averri Semantic IR: types, contract AST, diagnostic registry, zod schemas and pure helpers (ids, tier, sort, validate, diff, dependsOn, health)",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -12,5 +12,8 @@
   "files": ["src"],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

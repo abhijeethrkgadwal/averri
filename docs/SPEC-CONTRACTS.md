@@ -1,10 +1,10 @@
 # SPEC-CONTRACTS — The three-tier contract language
 
-Status: normative for V0. Types: `packages/ir/src/types.ts` §3 (AST) and `packages/core/src/types.ts` §3–6 (builders). Implemented by `@averr/core` (builders), `@averr/contracts` (evaluation), `@averr/testgen` (test derivation), `@averr/compiler` (checks, tier derivation, weakening rule). Decisions that deviate from the FINAL design document are logged in `SPEC-DECISIONS.md` and referenced as `D-n`.
+Status: normative for V0. Types: `packages/ir/src/types.ts` §3 (AST) and `packages/core/src/types.ts` §3–6 (builders). Implemented by `@averri/core` (builders), `@averri/contracts` (evaluation), `@averri/testgen` (test derivation), `@averri/compiler` (checks, tier derivation, weakening rule). Decisions that deviate from the FINAL design document are logged in `SPEC-DECISIONS.md` and referenced as `D-n`.
 
 ## 1. Why three tiers
 
-A contract written as an opaque lambda cannot be turned into a fast-check arbitrary, an auth matrix, an impact edge, or an actual-vs-expected report. A contract language with arbitrary expressivity cannot be evaluated in bounded time or compiled to SQL later. Averr therefore has exactly three tiers, each with a different TypeScript type, so tsc and the spec card both show which tier a clause is in:
+A contract written as an opaque lambda cannot be turned into a fast-check arbitrary, an auth matrix, an impact edge, or an actual-vs-expected report. A contract language with arbitrary expressivity cannot be evaluated in bounded time or compiled to SQL later. Averri therefore has exactly three tiers, each with a different TypeScript type, so tsc and the spec card both show which tier a clause is in:
 
 | Tier | Written as | Type | Serialised | Test generation | Static impact | Runtime |
 |---|---|---|---|---|---|---|
@@ -97,9 +97,9 @@ Evaluation is total: a missing field evaluates to `undefined`, comparisons with 
 
 Relation rules: a dotted key may traverse only to-one relations (Prisma nested `where` on a to-one relation is `{ user: { email } }`). A segment that crosses a `list: true` relation is A3009 ("where path crosses a list relation; no quantifier in V0"), as is `e.sum`, `e.count` or `db.countWhere` nested inside a `where`. `model` MUST be a Prisma client accessor name (A1003) and every key MUST resolve to a field (A3002). A field literally named `in`, `not`, `lt`, `lte`, `gt`, `gte` is unsupported (same limitation as Prisma) and A3002.
 
-**Un-flattening at runtime.** `@averr/contracts` turns `{ "user.email": {ref}, teamId: {ref}, role: { in: {lit} } }` into `{ user: { email: v1 }, teamId: v2, role: { in: [...] } }` while substituting refs; `{not: x}` → `{ not: x }`, `{lt: x}` → `{ lt: x }` etc.
+**Un-flattening at runtime.** `@averri/contracts` turns `{ "user.email": {ref}, teamId: {ref}, role: { in: {lit} } }` into `{ user: { email: v1 }, teamId: v2, role: { in: [...] } }` while substituting refs; `{not: x}` → `{ not: x }`, `{lt: x}` → `{ lt: x }` etc.
 
-**Undefined-ref rule (fail closed).** Prisma ignores `undefined` filter values, which would turn `db.exists("membership", { teamId: e.input("teamId"), userId: e.actor("id"), role: { in: [...] } })` into "is a member of anything" for an anonymous actor. Therefore: if any ref in a `where` (or in an operator operand) evaluates to `undefined`, the predicate is `false` for `db.exists`, `db.unique` **and** `db.none`, and `db.countWhere` is `0`; the PhaseRecord carries `undefinedRefs: RefPath[]`; the Prisma call is skipped. Independently, the `authorize` phase with `actor === null` on a non-public declaration short-circuits to `401 Unauthenticated` before any policy is evaluated. The fixture test for exactly this case is mandatory (§10).
+**Undefined-ref rule (fail closed).** Prisma ignores `undefined` filter values, which would turn `db.exists("membership", { teamId: e.input("teamId"), userId: e.actor("id"), role: { in: [...] } })` into "is a member of anything" for an anonymous actor. Therefore: if any ref in a `where` (or in an operator operand) evaluates to `undefined`, the predicate is `false` for `db.exists`, `db.unique` **and** `db.none`, and the whole clause is `false` when it contains a skipped `db.countWhere` (D-41a: a `0` would let `lte(count, n)` pass); the same holds when a Prisma call throws, and for a ref that is `undefined` underneath `e.not`, so negation can never turn a fail-closed `false` into a pass; the PhaseRecord carries `undefinedRefs: RefPath[]`; the Prisma call is skipped. Independently, the `authorize` phase with `actor === null` on a non-public declaration short-circuits to `401 Unauthenticated` before any policy is evaluated. The fixture test for exactly this case is mandatory (§10).
 
 Predicates run inside the action's transaction in declared mode (so they see the same snapshot as `run`); in observe mode `requires` predicates run against the test database before the handler and `ensures` predicates after it. Each predicate contributes a `reads -> Entity:<Model>` edge with provenance `declared`; predicate reads never require `db:read` in `effects` (A4002 looks at the body only).
 
@@ -138,7 +138,7 @@ Given a Contract at base `B` and head `H` with the same id:
 
 ## 8. Runtime behaviour per mode
 
-**Declared mode** (`run`). Owned by `@averr/contracts`; one pipeline, written identically in SPEC-DECLARATIONS §5.3 and core `ActionContext` docs:
+**Declared mode** (`run`). Owned by `@averri/contracts`; one pipeline, written identically in SPEC-DECLARATIONS §5.3 and core `ActionContext` docs:
 
 ```
 validate (Zod)                             → 400 ValidationFailed
@@ -158,23 +158,23 @@ emit buffered events                        → trace-only EmitFailed; response 
 
 Success returns `200` (adapter `status` may override) with the serialised result (`Date` → ISO string, `Decimal`/`BigInt` → string, `undefined` dropped). With `transaction: false` the same order runs on the plain client; an `ensures` failure cannot roll back, so the 500 body and the trace carry `committed: true`. In production, `requires` and `allow` are always on; `ensures` and invariants follow `config.sampling` (default 100% in dev/test, 0% in prod until configured).
 
-**Observe mode** (no `run`). Nothing runs outside Vitest. `observe(app, { declarations, config })` wraps at the **fetch boundary**: for Hono it calls `app.fetch(request)`; for Express it serves the app with `http.createServer(app)` on an ephemeral port for the test file. Middleware registration order is irrelevant because nothing is registered. For each request Averr matches method and path against the declared `route` templates with its own matcher (SPEC-IR §4.1 normalisation) and, on a match:
+**Observe mode** (no `run`). Nothing runs outside Vitest. `observe(app, { declarations, config })` wraps at the **fetch boundary**: for Hono it calls `app.fetch(request)`; for Express it serves the app with `http.createServer(app)` on an ephemeral port for the test file. Middleware registration order is irrelevant because nothing is registered. For each request Averri matches method and path against the declared `route` templates with its own matcher (SPEC-IR §4.1 normalisation) and, on a match:
 
 1. `validate`: parses `input` = `{ ...body|query, ...params }` with the declared Zod schema (400 is recorded, the request still goes to the app);
-2. `authorize`: recorded with `observed: true`; the decision is the app's own `401/403` vs 2xx, read after the response; Averr also evaluates the policy AST against the fixture's `actor` so the test can compare the two;
+2. `authorize`: recorded with `observed: true`; the decision is the app's own `401/403` vs 2xx, read after the response; Averri also evaluates the policy AST against the fixture's `actor` so the test can compare the two;
 3. before the handler: `findFirst(subject.where)` for `self`/`old`; `findMany` for every entity with invariants (test database only); `requires` tier 1/2 evaluated, guards called with the plain client;
 4. the real handler runs;
 5. after: subject reloaded, invariant entities re-read and diffed by `@id`; `ensures` evaluated with `result` = parsed JSON body (only when status is 2xx), `emitted` = calls captured by a spy on `config.emitter.spy`.
 
 The `handler:` option is used ONLY by `effect-scan`, line counting and the A2101 fix, never for interception. One `ActionTrace` is recorded per request with `test: { file, title }` from Vitest.
 
-## 9. Test derivation (what `@averr/testgen` MUST produce)
+## 9. Test derivation (what `@averri/testgen` MUST produce)
 
 Generated `it()` titles embed the ids so Vitest JSON output joins back to the graph: `"[Test:gen/Team.inviteMember.precondition] [Contract:Team.inviteMember.requires.notAlreadyMember] violation is rejected"`.
 
 | Source | Generated test | Declared-mode assertion | Observe-mode assertion | Suite id |
 |---|---|---|---|---|
-| Action/Query with `policy` (tier 1/2) | one request per actor fixture in `config.actors`; expected allow/deny is computed AT TEST TIME by evaluating the policy AST against each fixture's `actor` via `@averr/contracts` | `403 Forbidden` + `Policy:<id>` on deny, `401` for `anonymous`, non-4xx on allow (a wiring check: the pipeline evaluates the same AST) | status ∈ {401, 403} on deny, 2xx on allow (the meaningful case: the app's own middleware is tested against the declared policy) | `auth-matrix` |
+| Action/Query with `policy` (tier 1/2) | one request per actor fixture in `config.actors`; expected allow/deny is computed AT TEST TIME by evaluating the policy AST against each fixture's `actor` via `@averri/contracts` | `403 Forbidden` + `Policy:<id>` on deny, `401` for `anonymous`, non-4xx on allow (a wiring check: the pipeline evaluates the same AST) | status ∈ {401, 403} on deny, 2xx on allow (the meaningful case: the app's own middleware is tested against the declared policy) | `auth-matrix` |
 | `policy` is a guard | `it.todo` naming the policy | — | — | `auth-matrix` |
 | each tier 1 `requires` | an arbitrary violating exactly that clause (others satisfied); one satisfying all clauses | violation → `412` + Contract id; satisfying → not 412 | violation → status ∉ 2xx and the trace's `requires` PhaseRecord for that contract has `ok: false`; satisfying → 2xx | `precondition` |
 | each tier 2 `requires` | fixtures making the predicate false/true (algorithm below) | same | same | `precondition` |
@@ -190,11 +190,11 @@ Generated `it()` titles embed the ids so Vitest JSON output joins back to the gr
 
 **Fixture synthesis for tier 2 predicates.** For a predicate over `model` with `where`: build the row that satisfies `where` by assigning refs from the generated input/actor and literals as given; for every required (non-optional, non-defaulted) field not in `where`, draw a fast-check arbitrary per scalar type (`String` → non-empty alphanumeric, `Int` → int, `DateTime` → recent date, `Boolean`, enums → sample of `values`, `Decimal`/`Float` → finite number, `BigInt` → bigint); walk required to-one relations to depth 3 creating parents first; respect `uniques` by drawing until unique within the test; the falsifying fixture is the same row with one `where` key altered (`eq` → different value, `in` → not-in sample, `not` → the excluded value, range → out of range). Fallback: `it.todo(reason)` for relation cycles, `Json`, `Bytes`, `unsupported` fields, or `where` keys on list relations.
 
-Generated files live in `<config.test.generatedDir>/<owner>.gen.test.ts` with a `// @generated by averr <version> from <id> hash:<sourceHash> — do not edit` header and are regenerated only on `sourceHash` change (SPEC-IR §4, D-13).
+Generated files live in `<config.test.generatedDir>/<owner>.gen.test.ts` with a `// @generated by averri <version> from <id> hash:<sourceHash> — do not edit` header and are regenerated only on `sourceHash` change (SPEC-IR §4, D-13).
 
 ## 10. Implementation notes
 
-- **`@averr/core`**: builders construct AST objects and freeze them. `e.*` never inspects functions. Bare-path normalisation (`"status"` → `self.status`) happens in the builder so the AST is always root-qualified. Nested `where` objects are flattened in the builder (D-3). No import-time side effects.
-- **`@averr/compiler`**: implements S3001–A3010, tier derivation, `reads` edges from predicates, and the weakening rule. Field checks use the Prisma schema facts for `self/old` roots and `where` keys, the TypeChecker type of `z.output<typeof schema>` for `input` (never the runtime `shape`), the declared `output` for `result`, and the augmented `Actor` type (via ts-morph type text) for `actor` when available, else skip.
-- **`@averr/contracts`**: one evaluator for tier 1 over plain objects, one compiler from `db.*` to `prisma[model].count` with un-flattening and the undefined-ref rule, one guard runner; all three record `PhaseRecord`s. Observe-mode adapter for Hono (`fetch`) and Express (ephemeral server). Mandatory fixture tests: (a) anonymous actor against the `OwnerOrAdmin` policy returns 401 and the policy is never evaluated; (b) a `db.exists` whose `userId: e.actor("id")` is `undefined` evaluates to `false` with `undefinedRefs: ["actor.id"]` and performs no Prisma call; (c) the same for `db.none` (false, not true).
-- **`@averr/testgen`**: arbitraries per Zod type via `fast-check`; the violating arbitrary for a clause is derived by negating the root comparison (`eq` → `ne` value, `lt N` → `>= N`, `in list` → not-in sample, `isNull` → non-null sample, `and` → violate one conjunct, `or` → violate all). Emits titles with the id prefixes above and reads `expect.getState().currentTestName` in the observe wrapper to fill `ActionTrace.test`.
+- **`@averri/core`**: builders construct AST objects and freeze them. `e.*` never inspects functions. Bare-path normalisation (`"status"` → `self.status`) happens in the builder so the AST is always root-qualified. Nested `where` objects are flattened in the builder (D-3). No import-time side effects.
+- **`@averri/compiler`**: implements S3001–A3010, tier derivation, `reads` edges from predicates, and the weakening rule. Field checks use the Prisma schema facts for `self/old` roots and `where` keys, the TypeChecker type of `z.output<typeof schema>` for `input` (never the runtime `shape`), the declared `output` for `result`, and the augmented `Actor` type (via ts-morph type text) for `actor` when available, else skip.
+- **`@averri/contracts`**: one evaluator for tier 1 over plain objects, one compiler from `db.*` to `prisma[model].count` with un-flattening and the undefined-ref rule, one guard runner; all three record `PhaseRecord`s. Observe-mode adapter for Hono (`fetch`) and Express (ephemeral server). Mandatory fixture tests: (a) anonymous actor against the `OwnerOrAdmin` policy returns 401 and the policy is never evaluated; (b) a `db.exists` whose `userId: e.actor("id")` is `undefined` evaluates to `false` with `undefinedRefs: ["actor.id"]` and performs no Prisma call; (c) the same for `db.none` (false, not true).
+- **`@averri/testgen`**: arbitraries per Zod type via `fast-check`; the violating arbitrary for a clause is derived by negating the root comparison (`eq` → `ne` value, `lt N` → `>= N`, `in list` → not-in sample, `isNull` → non-null sample, `and` → violate one conjunct, `or` → violate all). Emits titles with the id prefixes above and reads `expect.getState().currentTestName` in the observe wrapper to fill `ActionTrace.test`.

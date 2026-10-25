@@ -1,0 +1,176 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`find > json hits snapshot 1`] = `
+{
+  "hits": [
+    {
+      "id": "Entity:Team",
+      "kind": "Entity",
+      "origin": "extracted",
+      "path": "prisma/schema.prisma:10",
+      "summary": "Prisma model Team · 4 fields (2 relations) · id id",
+    },
+    {
+      "id": "Entity:Invitation",
+      "kind": "Entity",
+      "origin": "declared",
+      "path": "prisma/schema.prisma:34",
+      "summary": "Prisma model Invitation · 9 fields (1 relations) · id id · unique teamId+email · intent One invitation per team and email; re-inviting resends.",
+    },
+    {
+      "id": "Entity:Membership",
+      "kind": "Entity",
+      "origin": "declared",
+      "path": "prisma/schema.prisma:23",
+      "summary": "Prisma model Membership · 6 fields (2 relations) · id id · unique teamId+userId · intent Who belongs to a team and with which role.",
+    },
+  ],
+}
+`;
+
+exports[`overview > envelope and data snapshot 1`] = `
+{
+  "counts": {
+    "Action": 5,
+    "Contract": 18,
+    "Entity": 4,
+    "Event": 3,
+    "Exposure": 9,
+    "Field": 22,
+    "Integration": 1,
+    "Module": 17,
+    "Policy": 2,
+    "Query": 3,
+    "Test": 20,
+    "Workflow": 1,
+  },
+  "health": {
+    "actionsDeclared": 3,
+    "actionsObserve": 2,
+    "contracts": 18,
+    "errors": 20,
+    "eventsWithoutConsumer": 1,
+    "exposures": 9,
+    "exposuresUndeclared": 5,
+    "exposuresWithoutPolicy": 2,
+    "handlerLineRatio": 0.067,
+    "handlerLineRatioNote": "informational in V0",
+    "handlerLines": 23,
+    "lowConfidenceNodes": 0,
+    "opaqueGuardRatio": 0.111,
+    "opaqueGuards": 2,
+    "queries": 3,
+    "staleGeneratedTests": 0,
+    "totalLines": 345,
+    "warnings": 15,
+  },
+  "quickstart": "Call find or impact before editing an entity, route, policy or contract; ids look like Action:Team.inviteMember.
+Run check instead of raw tsc/vitest; it regenerates tests/averri/*.gen.test.ts (never edit those).
+Contracts: left side is a path string ("result.email"), right side is e.<root>() or a literal.
+Prefer e.*/db.* clauses; bare async guards are opaque and get no generated tests.
+On low-confidence or verify notes, use read_source; prefer the first fix on a diagnostic.",
+  "stack": {
+    "commands": {
+      "build": null,
+      "test": "npm run test",
+      "typecheck": "npx tsc --noEmit",
+    },
+    "conventions": [
+      "auth middleware: auth",
+      "events are published as "averri/<Event>"",
+      "actor fixtures: anonymous, owner, member",
+      "generated tests live in tests/averri (never edit them)",
+    ],
+    "entryPoints": [
+      "src/app.ts",
+    ],
+    "orm": "prisma",
+    "packageManager": "unknown",
+    "prismaSchema": "prisma/schema.prisma",
+    "routers": [
+      "hono",
+    ],
+    "testRunner": "vitest",
+    "validator": "zod",
+  },
+  "topModules": [
+    {
+      "actions": 8,
+      "exposures": 0,
+      "file": "src/averri/actions.ts",
+    },
+    {
+      "actions": 0,
+      "exposures": 7,
+      "file": "src/routes/teams.ts",
+    },
+    {
+      "actions": 0,
+      "exposures": 1,
+      "file": "src/app.ts",
+    },
+    {
+      "actions": 0,
+      "exposures": 1,
+      "file": "src/routes/webhooks.ts",
+    },
+  ],
+}
+`;
+
+exports[`suggest > drafts observe-mode declarations as unified diffs for undeclared routes 1`] = `
+[
+  {
+    "evidence": [
+      "GET /teams/:teamId/invitations (Exposure:hono:src/routes/teams.ts:13:11) has no declaration at src/routes/teams.ts:13",
+      "handler src/handlers.ts:listInvitationsHandler, 0 Prisma write call(s)",
+      "input from path params (teamId); no Zod schema detected",
+      "policy Policy:Team.OwnerOrAdmin reused: >= 2 sibling Exposures in src/routes/teams.ts share it",
+      "new file src/handlers.averri.ts next to the handler module",
+    ],
+    "target": "Exposure:hono:src/routes/teams.ts:13:11",
+  },
+  {
+    "evidence": [
+      "GET /teams/:teamId/stats (Exposure:hono:src/routes/teams.ts:16:11) has no declaration at src/routes/teams.ts:16",
+      "handler src/routes/teams.ts:(anonymous), 0 Prisma write call(s)",
+      "input from path params (teamId); no Zod schema detected",
+      "policy Policy:Team.OwnerOrAdmin reused: >= 2 sibling Exposures in src/routes/teams.ts share it",
+      "new file src/routes/teams.averri.ts next to the handler module",
+    ],
+    "target": "Exposure:hono:src/routes/teams.ts:16:11",
+  },
+  {
+    "evidence": [
+      "DELETE /teams/:teamId (Exposure:hono:src/routes/teams.ts:18:11) has no declaration at src/routes/teams.ts:18",
+      "handler src/routes/teams.ts:toHono(RemoveTeam, { actor: () => null }), 0 Prisma write call(s)",
+      "input from path params (teamId); no Zod schema detected",
+      "policy Policy:Team.OwnerOrAdmin reused: >= 2 sibling Exposures in src/routes/teams.ts share it",
+      "no recognisable \`if (...) throw/return 4xx\` pattern in the handler; no requires drafted",
+      "appended to src/routes/teams.averri.ts",
+    ],
+    "target": "Exposure:hono:src/routes/teams.ts:18:11",
+  },
+  {
+    "evidence": [
+      "POST /webhooks/stripe (Exposure:hono:src/routes/webhooks.ts:6:14) has no declaration at src/routes/webhooks.ts:6",
+      "handler src/routes/webhooks.ts:(anonymous), 0 Prisma write call(s)",
+      "no Zod schema detected; empty input",
+      "no policy suggested: fewer than 2 sibling Exposures share one",
+      "no recognisable \`if (...) throw/return 4xx\` pattern in the handler; no requires drafted",
+      "new file src/routes/webhooks.averri.ts next to the handler module",
+    ],
+    "target": "Exposure:hono:src/routes/webhooks.ts:6:14",
+  },
+  {
+    "evidence": [
+      "GET /health (Exposure:hono:src/app.ts:12:4) has no declaration at src/app.ts:12",
+      "handler src/app.ts:(anonymous), 0 Prisma write call(s)",
+      "no Zod schema detected; empty input",
+      "no policy suggested: fewer than 2 sibling Exposures share one",
+      "new file src/app.averri.ts next to the handler module",
+    ],
+    "target": "Exposure:hono:src/app.ts:12:4",
+  },
+]
+`;

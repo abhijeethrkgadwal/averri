@@ -1,7 +1,7 @@
 {
-  "name": "@averr/contracts",
+  "name": "@averri/contracts",
   "version": "0.0.1",
-  "description": "Averr contracts package",
+  "description": "Averri runtime: tier-1 expression evaluator, db.* predicate compiler, guard runner, declared-mode pipeline (handle/toHono/toExpress), observe-mode Vitest wrapper and JSONL trace recorder",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -9,8 +9,38 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/core": "0.0.1",
+    "@averri/ir": "0.0.1"
+  },
+  "peerDependencies": {
+    "express": "^5.0.0",
+    "hono": "^4.0.0",
+    "vitest": "^2.0.0",
+    "fast-check": "^4.0.0",
+    "@prisma/client": "^6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    },
+    "fast-check": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    }
   }
 }

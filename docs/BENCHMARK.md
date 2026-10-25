@@ -8,13 +8,13 @@ Adapted from section 7 of [docs/research/00-FINAL-strategy-and-design.md](resear
 
 Does giving a coding agent human-approved contracts, verified impact, and structured diagnostics for a TypeScript backend raise its hidden-test pass rate, or reduce its iterations to green, beyond what a well-documented repository with LSP already gives it, and is any gain attributable to the representation rather than to a good library or to generic code-graph retrieval?
 
-Three things this benchmark does **not** try to show: that Averr saves tokens (a token win at equal pass rate is reproducible by writing less code and convinces nobody); that Averr helps agents navigate (frontier models navigate adequately and vendors give indexing away); or that any result generalises beyond one model, one harness, one seed app, and one stack.
+Three things this benchmark does **not** try to show: that Averri saves tokens (a token win at equal pass rate is reproducible by writing less code and convinces nobody); that Averri helps agents navigate (frontier models navigate adequately and vendors give indexing away); or that any result generalises beyond one model, one harness, one seed app, and one stack.
 
 ## 2. Seed application
 
 One multi-tenant SaaS backend, roughly 20k lines of TypeScript on Hono + Prisma + Zod: organisations, members, invitations, role-based access control, Stripe billing with a webhook. It lives at `examples/seed-app` and is the same app the project uses as its reference. Two requirements that exist to protect the result:
 
-- The app is authored, or at minimum independently audited, by someone who is not a Averr core contributor, so that "the app was written to make Averr look good" is checkable.
+- The app is authored, or at minimum independently audited, by someone who is not a Averri core contributor, so that "the app was written to make Averri look good" is checkable.
 - The app ships with a maintained `CLAUDE.md` and `ARCHITECTURE.md` of the quality a careful team would write, because the control arm is a documented repo, not a bare one.
 
 ## 3. Tasks
@@ -41,7 +41,7 @@ A **held-out set of ten tasks** is written after the primitive set is frozen and
 | **A** | Seed app + maintained `CLAUDE.md` and `ARCHITECTURE.md` + Claude Code with LSP on | The honest control. A bare repo would measure "we wrote the docs." |
 | **A+lib** | A + the pitfall primitives (webhook verification, idempotency, cursor pagination) as an ordinary TypeScript library with documentation and no compiler | Separates "a good library" from "a representation." If this arm captures the gain, the compiler and graph are not the product. |
 | **A+graph** | A + a free generic code-graph MCP server (e.g. CodeGraph), configured per its docs | Separates retrieval from semantics. If this arm captures the gain, code graphs are the product and they are already free. |
-| **B** | A + Averr in observe mode with contracts declared on the 30 existing actions, MCP enabled, the `averr init` block in `CLAUDE.md` | The representation, attached without touching handlers. The Averr tool schemas and the CLAUDE.md block are charged to this arm's token counts. |
+| **B** | A + Averri in observe mode with contracts declared on the 30 existing actions, MCP enabled, the `averri init` block in `CLAUDE.md` | The representation, attached without touching handlers. The Averri tool schemas and the CLAUDE.md block are charged to this arm's token counts. |
 | **B+** | B with the same actions refactored to `defineAction` mode | The representation with the runtime pipeline owning validation, authorization, contracts, and transactions. |
 | C, D | Stage 2 arms (declared mode with derivation) | Added only when Stage 2 exists. Not part of v0. |
 
@@ -52,7 +52,7 @@ A **held-out set of ten tasks** is written after the primitive set is frozen and
 - Same tool-call budget and same wall-clock budget per session across arms.
 - **N = 10 sessions per task per arm.** 20 tasks by 5 arms by 10 = 1,000 sessions. Run variance in agent sessions is large; smaller N produces results that do not replicate.
 - Every session starts from the same commit of the seed app in a fresh container with the same dependency lockfile.
-- **Tool-usage rate** is recorded: the fraction of sessions in B and B+ that actually called any Averr tool, and in A+graph that called the graph. Advisory `CLAUDE.md` instructions are ignored a meaningful fraction of the time; a null result in an arm where the agent never used the tools is a different finding from a null result where it did, and both are reported.
+- **Tool-usage rate** is recorded: the fraction of sessions in B and B+ that actually called any Averri tool, and in A+graph that called the graph. Advisory `CLAUDE.md` instructions are ignored a meaningful fraction of the time; a null result in an arm where the agent never used the tools is a different finding from a null result where it did, and both are reported.
 - Hidden tests are never visible to the agent and are never in the container during a session; scoring happens after the session ends on the session's final diff.
 
 ## 6. Metrics
@@ -70,7 +70,7 @@ Secondary, all reported:
 - diff size in changed lines;
 - **contract-weakening events** in B and B+: sessions where the agent loosened or removed a `requires`, `ensures`, or `policy` to get green, and whether the final PR text disclosed it;
 - blinded readability score on diffs, by reviewers who do not know the arm;
-- **syntactic error rate on Averr constructs** in B and B+, reported separately, so the no-training-data cost of a 0.x library is visible rather than buried in the pass rate;
+- **syntactic error rate on Averri constructs** in B and B+, reported separately, so the no-training-data cost of a 0.x library is visible rather than buried in the pass rate;
 - per-category results for all of the above.
 
 ## 7. Headline claim
@@ -118,7 +118,7 @@ If no funding materialises, the pre-registration stands as a public, falsifiable
 The harness lives in `bench/`. The intended procedure once V0 lands:
 
 ```sh
-git clone <this repo> averr && cd averr
+git clone <this repo> averri && cd averri
 npm install
 npm -w bench run freeze                 # verifies this file's hash matches the committed pre-registration
 npm -w bench run pilot -- --arms A,A+lib,B --n 3 --tasks feature/cursor-pagination,bugfix/validation-mismatch
@@ -137,7 +137,7 @@ We are explicitly asking people who are not us to run this.
 - **Research groups and benchmark organisations:** run the pre-registered design as written and publish your result. We will link it from this file whether or not it agrees with ours. If you want to add a model, a harness, or a held-out task set, do it as a documented variant so the original design remains comparable.
 - **Sceptics:** the fastest way to show this project is wrong is to run arms A and A+lib and find that the library alone captures the gain. We would rather know in 2026 than in 2028.
 - **Competing tools:** if you build a contract layer, a code graph, or a spec-driven workflow for TypeScript backends, the arm structure accommodates you. Open an issue describing the arm; the only requirement is that your configuration is documented well enough for someone else to reproduce it.
-- **Task authors:** we accept third-party tasks for the held-out set, under the rule that the author has not read the Averr primitive source. Open an issue with the ticket text and the acceptance-test sketch; hidden suites are exchanged privately until the run is complete.
+- **Task authors:** we accept third-party tasks for the held-out set, under the rule that the author has not read the Averri primitive source. Open an issue with the ticket text and the acceptance-test sketch; hidden suites are exchanged privately until the run is complete.
 
 Open an issue titled `benchmark:` with what you ran and a link to your logs, or a PR adding your result to a `results/` index once that exists.
 

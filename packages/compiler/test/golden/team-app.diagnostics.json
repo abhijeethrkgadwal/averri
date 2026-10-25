@@ -1,0 +1,1190 @@
+[
+  {
+    "code": "A2103",
+    "severity": "error",
+    "node": "Query:Team.settings",
+    "path": "src/averri/actions.ts:102",
+    "title": "Exposed route has no policy: Team.settings",
+    "message": "The declaration has neither policy nor public: true. public: true is the explicit opt-out; it is never proposed automatically.",
+    "cause": [
+      {
+        "node": "Query:Team.settings",
+        "why": "bound to Exposure:hono:src/routes/teams.ts:15:11 without policy or public"
+      }
+    ],
+    "related": [
+      "Policy:Team.OwnerOrAdmin",
+      "Policy:Team.Anyone"
+    ],
+    "fixes": [
+      {
+        "label": "Use Team.OwnerOrAdmin like its siblings",
+        "evidence": "used by 7 sibling declarations in src/averri/actions.ts",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -103,6 +103,7 @@\n   intent: \"Team settings.\",\n   route: { method: \"GET\", path: \"/teams/:teamId/settings\" },\n   input: z.object({ teamId: z.string() }),\n+  policy: OwnerOrAdmin,\n });\n \n export const Stats = query(\"Team.stats\", {\n"
+      }
+    ]
+  },
+  {
+    "code": "A4004",
+    "severity": "error",
+    "node": "Query:Team.stats",
+    "path": "src/averri/actions.ts:113",
+    "title": "Query handler writes to the database: Team.stats",
+    "message": "effect-scan found writes to Team (db.team.update at src/averri/actions.ts:113:10); declare an action() instead.",
+    "cause": [
+      {
+        "node": "Query:Team.stats",
+        "why": "Query handler writes to the database: Team.stats"
+      }
+    ],
+    "related": [
+      "Entity:Team"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A2101",
+    "severity": "error",
+    "node": "Query:Team.listInvites",
+    "path": "src/averri/actions.ts:40",
+    "title": "Declared route has no matching exposure: GET /teams/:teamId/invites",
+    "cause": [
+      {
+        "node": "Query:Team.listInvites",
+        "why": "declares route GET /teams/:teamId/invites"
+      },
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:13:11",
+        "why": "registers GET /teams/:teamId/invitations with handler listInvitationsHandler"
+      }
+    ],
+    "related": [
+      "Exposure:hono:src/routes/teams.ts:13:11"
+    ],
+    "fixes": [
+      {
+        "label": "Use the registered path",
+        "evidence": "listInvitationsHandler is the handler of exactly one exposure",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -37,7 +37,7 @@\n \n export const ListInvites = query(\"Team.listInvites\", {\n   intent: \"List a team's invitations.\",\n-  route: { method: \"GET\", path: \"/teams/:teamId/invites\" },\n+  route: { method: \"GET\", path: \"/teams/:teamId/invitations\" },\n   input: z.object({ teamId: z.string() }),\n   policy: OwnerOrAdmin,\n   handler: listInvitationsHandler,\n"
+      }
+    ]
+  },
+  {
+    "code": "A2105",
+    "severity": "error",
+    "node": "Action:Team.rename",
+    "path": "src/averri/actions.ts:46",
+    "title": "Exposed declared-mode action has no intent: Team.rename",
+    "cause": [
+      {
+        "node": "Action:Team.rename",
+        "why": "Exposed declared-mode action has no intent: Team.rename"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2101",
+    "severity": "error",
+    "node": "Action:Team.remove",
+    "path": "src/averri/actions.ts:56",
+    "title": "Declared route has no matching exposure: DELETE /teams/:id",
+    "cause": [
+      {
+        "node": "Action:Team.remove",
+        "why": "declares route DELETE /teams/:id"
+      },
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:18:11",
+        "why": "registers DELETE /teams/:teamId with handler toHono(RemoveTeam, { actor: () => null })"
+      }
+    ],
+    "related": [
+      "Exposure:hono:src/routes/teams.ts:18:11"
+    ],
+    "fixes": [
+      {
+        "label": "Use the registered path",
+        "evidence": "toHono/toExpress(RemoveTeam) is the handler of exactly one exposure",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -53,7 +53,7 @@\n \n export const RemoveTeam = action(\"Team.remove\", {\n   intent: \"Owners delete a team.\",\n-  route: { method: \"DELETE\", path: \"/teams/:id\" },\n+  route: { method: \"DELETE\", path: \"/teams/:teamId\" },\n   input: z.object({ teamId: z.string() }),\n   policy: OwnerOrAdmin,\n   effects: [\"db:write\", \"network\"],\n"
+      }
+    ]
+  },
+  {
+    "code": "A4005",
+    "severity": "error",
+    "node": "Action:Team.remove",
+    "path": "src/averri/actions.ts:61",
+    "title": "Integration Stripe called inside a Averri-owned transaction",
+    "message": "Team.remove runs in an interactive transaction (transaction !== false); Stripe is nonTransactional, so a rollback cannot undo the foreign call. Move the call after commit (emit an event) or set transaction: false.",
+    "cause": [
+      {
+        "node": "Action:Team.remove",
+        "why": "run executes inside the action's transaction"
+      },
+      {
+        "node": "Integration:Stripe",
+        "why": "declared nonTransactional"
+      }
+    ],
+    "related": [
+      "Integration:Stripe"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A4001",
+    "severity": "error",
+    "node": "Action:Team.remove",
+    "path": "src/averri/actions.ts:62",
+    "title": "Emitted event is not declared: TeamArchived",
+    "message": "emit(TeamArchived, …) in Action:Team.remove does not reference an event() declaration.",
+    "cause": [
+      {
+        "node": "Action:Team.remove",
+        "why": "Emitted event is not declared: TeamArchived"
+      }
+    ],
+    "related": [],
+    "fixes": [
+      {
+        "label": "Declare event TeamArchived",
+        "evidence": "emit(TeamArchived, …) passes 2 payload key(s): teamId, archived",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -1,5 +1,5 @@\n // @ts-nocheck — fixture: several declarations below are deliberately wrong (each triggers one rule).\n-import { action, db, e, query } from \"@averri/core\";\n+import { action, db, e, query, event } from \"@averri/core\";\n import { z } from \"zod\";\n import { listInvitationsHandler } from \"../handlers.js\";\n import { stripe } from \"../stripe.js\";\n@@ -51,6 +51,8 @@\n   run: async ({ input, tx }) => tx.team.update({ where: { id: input.teamId }, data: { name: input.name } }),\n });\n \n+export const TeamArchived = event(\"TeamArchived\", { payload: { teamId: \"string\", archived: \"boolean\" } });\n+\n export const RemoveTeam = action(\"Team.remove\", {\n   intent: \"Owners delete a team.\",\n   route: { method: \"DELETE\", path: \"/teams/:id\" },\n"
+      }
+    ]
+  },
+  {
+    "code": "A2101",
+    "severity": "error",
+    "node": "Action:Team.acceptInvite",
+    "path": "src/averri/actions.ts:69",
+    "title": "Declared route has no matching exposure: POST /invitations/:invitationId/accept",
+    "message": "No Hono/Express registration has this method and normalised path (param names must match).",
+    "cause": [
+      {
+        "node": "Action:Team.acceptInvite",
+        "why": "declares route POST /invitations/:invitationId/accept"
+      },
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:12:11",
+        "why": "closest registration: POST /teams/:teamId/invitations"
+      }
+    ],
+    "related": [
+      "Exposure:hono:src/routes/teams.ts:12:11",
+      "Exposure:hono:src/routes/webhooks.ts:6:14"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A3006",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.requires.seatsMatch",
+    "path": "src/averri/actions.ts:70",
+    "title": "Zod input field drifts from Prisma field type: input.seats vs Invitation.seats",
+    "message": "input.seats is a string but Invitation.seats is Int.",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.requires.seatsMatch",
+        "why": "compares input.seats with Invitation.seats"
+      },
+      {
+        "node": "Field:Invitation.seats",
+        "why": "Invitation.seats is Int"
+      }
+    ],
+    "related": [
+      "Field:Invitation.seats",
+      "Action:Team.acceptInvite"
+    ],
+    "fixes": [
+      {
+        "label": "Derive the Zod type from Invitation.seats",
+        "evidence": "Invitation.seats is Int in schema.prisma",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -67,7 +67,7 @@\n export const AcceptInvite = action(\"Team.acceptInvite\", {\n   intent: \"The invited person accepts.\",\n   route: { method: \"POST\", path: \"/invitations/:invitationId/accept\" },\n-  input: z.object({ invitationId: z.string(), seats: z.string() }),\n+  input: z.object({ invitationId: z.string(), seats: z.number().int() }),\n   output: \"Invitation\",\n   policy: OwnerOrAdmin,\n   subject: { entity: Invitation, where: { id: e.input(\"invitationId\") } },\n"
+      }
+    ]
+  },
+  {
+    "code": "A3002",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.requires.isPending",
+    "path": "src/averri/actions.ts:75",
+    "title": "Contract references unknown field: self.Status",
+    "message": "Invitation has no field Status (fields: id, teamId, team, email, role, status, seats, acceptedAt, createdAt).",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.requires.isPending",
+        "why": "Contract references unknown field: self.Status"
+      }
+    ],
+    "related": [
+      "Entity:Invitation"
+    ],
+    "fixes": [
+      {
+        "label": "Use status",
+        "evidence": "status is the only field of Invitation matching \"Status\" case-insensitively",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -72,7 +72,7 @@\n   policy: OwnerOrAdmin,\n   subject: { entity: Invitation, where: { id: e.input(\"invitationId\") } },\n   requires: {\n-    isPending: e.eq(\"self.Status\", \"pending\"),\n+    isPending: e.eq(\"self.status\", \"pending\"),\n     sameTeam: e.eq(\"self.teamId\", e.input(\"input.invitationId\")),\n     noResultYet: e.isNull(\"result.acceptedAt\"),\n     orderable: e.lt(\"self.email\", 3),\n"
+      }
+    ]
+  },
+  {
+    "code": "A3002",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.requires.sameTeam",
+    "path": "src/averri/actions.ts:76",
+    "title": "Contract references unknown field: doubled root in e.input(\"input.invitationId\")",
+    "message": "e.input(\"input.invitationId\") denotes input.input.invitationId; the builder does not strip a repeated root.",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.requires.sameTeam",
+        "why": "Contract references unknown field: doubled root in e.input(\"input.invitationId\")"
+      }
+    ],
+    "related": [],
+    "fixes": [
+      {
+        "label": "Strip the duplicate root",
+        "evidence": "e.input() already supplies the input root",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -73,7 +73,7 @@\n   subject: { entity: Invitation, where: { id: e.input(\"invitationId\") } },\n   requires: {\n     isPending: e.eq(\"self.Status\", \"pending\"),\n-    sameTeam: e.eq(\"self.teamId\", e.input(\"input.invitationId\")),\n+    sameTeam: e.eq(\"self.teamId\", e.input(\"invitationId\")),\n     noResultYet: e.isNull(\"result.acceptedAt\"),\n     orderable: e.lt(\"self.email\", 3),\n     seatsMatch: e.eq(\"self.seats\", e.input(\"seats\")),\n"
+      }
+    ]
+  },
+  {
+    "code": "A3003",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.requires.noResultYet",
+    "path": "src/averri/actions.ts:77",
+    "title": "Reference root not allowed in requires: result.acceptedAt",
+    "message": "requires clauses may reference input, actor, self; result.* is not available there.",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.requires.noResultYet",
+        "why": "Reference root not allowed in requires: result.acceptedAt"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A3008",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.requires.orderable",
+    "path": "src/averri/actions.ts:78",
+    "title": "Operator not applicable to operand type in orderable",
+    "message": "self.email < 3: lt over string and numeric",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.requires.orderable",
+        "why": "Operator not applicable to operand type in orderable"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A3010",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.ensures.accepted",
+    "path": "src/averri/actions.ts:82",
+    "title": "Reference root looks misspelled: \"reslt.status\" (did you mean result?)",
+    "message": "A bare path means self.<field>, so \"reslt.status\" was read as self.reslt.status.",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.ensures.accepted",
+        "why": "Reference root looks misspelled: \"reslt.status\" (did you mean result?)"
+      }
+    ],
+    "related": [],
+    "fixes": [
+      {
+        "label": "Use result.*",
+        "evidence": "\"reslt\" is within edit distance 2 of the root \"result\" and is not a field of the subject",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -79,7 +79,7 @@\n     seatsMatch: e.eq(\"self.seats\", e.input(\"seats\")),\n   },\n   ensures: {\n-    accepted: e.eq(\"reslt.status\", \"accepted\"),\n+    accepted: e.eq(\"result.status\", \"accepted\"),\n     literalRef: e.eq(\"result.email\", \"input.email\"),\n     crossesList: db.exists(\"team\", { members: { role: \"owner\" } }),\n   },\n"
+      }
+    ]
+  },
+  {
+    "code": "A3007",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.ensures.literalRef",
+    "path": "src/averri/actions.ts:83",
+    "title": "Literal on the right looks like a reference: \"input.email\"",
+    "message": "Strings on the right of a comparison are literals; use e.input(\"email\") to reference input.email.",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.ensures.literalRef",
+        "why": "Literal on the right looks like a reference: \"input.email\""
+      }
+    ],
+    "related": [],
+    "fixes": [
+      {
+        "label": "Wrap in e.input()",
+        "evidence": "the right-hand side is always a literal; \"input.email\" names the input root",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -80,7 +80,7 @@\n   },\n   ensures: {\n     accepted: e.eq(\"reslt.status\", \"accepted\"),\n-    literalRef: e.eq(\"result.email\", \"input.email\"),\n+    literalRef: e.eq(\"result.email\", e.input(\"email\")),\n     crossesList: db.exists(\"team\", { members: { role: \"owner\" } }),\n   },\n   effects: [\"db:write\"],\n"
+      }
+    ]
+  },
+  {
+    "code": "A3009",
+    "severity": "error",
+    "node": "Contract:Team.acceptInvite.ensures.crossesList",
+    "path": "src/averri/actions.ts:84",
+    "title": "where path crosses a list relation: team.members.role",
+    "message": "members is a list relation; a dotted where key may traverse only to-one relations (no some/every/none in V0).",
+    "cause": [
+      {
+        "node": "Contract:Team.acceptInvite.ensures.crossesList",
+        "why": "where path crosses a list relation: team.members.role"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A3001",
+    "severity": "error",
+    "node": "Contract:Team.audit.requires.selfless",
+    "path": "src/averri/actions.ts:95",
+    "title": "self/old reference without a subject: self.name",
+    "message": "Contract:Team.audit.requires.selfless references self.name, but Action:Team.audit declares no subject. Add subject: { entity, where } or reference input/result.",
+    "cause": [
+      {
+        "node": "Contract:Team.audit.requires.selfless",
+        "why": "self/old reference without a subject: self.name"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A1004",
+    "severity": "error",
+    "node": "Action:Team.audit",
+    "path": "src/averri/actions.ts:97",
+    "title": "Declaration option is not statically analysable",
+    "message": "a binary expression (??) is outside the statically analysable subset (expected e.*, db.* or a guard function)",
+    "cause": [
+      {
+        "node": "Action:Team.audit",
+        "why": "Declaration option is not statically analysable"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A1001",
+    "severity": "error",
+    "node": "Action:Team.inviteMember",
+    "path": "src/averri/duplicates.ts:6",
+    "title": "Duplicate declaration id",
+    "message": "Action:Team.inviteMember is declared at src/averri/actions.ts:12 and again at src/averri/duplicates.ts:6; the first in source order is kept",
+    "cause": [
+      {
+        "node": "Action:Team.inviteMember",
+        "why": "declared again at src/averri/duplicates.ts:6"
+      },
+      {
+        "node": "Action:Team.inviteMember",
+        "why": "first declared at src/averri/actions.ts:12"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A1003",
+    "severity": "error",
+    "node": "Entity:Invitaton",
+    "path": "src/averri/entities.ts:20",
+    "title": "Unknown Prisma model: Invitaton",
+    "message": "\"Invitaton\" is not a model in the schema facts; closest: Invitation, Team, User",
+    "cause": [
+      {
+        "node": "Entity:Invitaton",
+        "why": "Unknown Prisma model: Invitaton"
+      }
+    ],
+    "related": [
+      "Entity:Invitation",
+      "Entity:Team",
+      "Entity:User"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A2103",
+    "severity": "warning",
+    "node": "Exposure:hono:src/app.ts:12:4",
+    "path": "src/app.ts:12",
+    "title": "Exposed route has no policy: GET /health",
+    "message": "No declaration binds this route and none of its middleware (none) is in config.authMiddleware. Declare it with a policy, or with public: true as the explicit opt-out.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/app.ts:12:4",
+        "why": "Exposed route has no policy: GET /health"
+      }
+    ],
+    "related": [
+      "Policy:Team.Anyone",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A2104",
+    "severity": "warning",
+    "node": "Exposure:hono:src/app.ts:12:4",
+    "path": "src/app.ts:12",
+    "title": "Exposure has no declaration: GET /health",
+    "message": "No action()/query() declares route GET /health; `suggest {\"id\": \"Exposure:hono:src/app.ts:12:4\"}` drafts an observe-mode declaration.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/app.ts:12:4",
+        "why": "Exposure has no declaration: GET /health"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A4002",
+    "severity": "warning",
+    "node": "Action:Team.rename",
+    "path": "src/averri/actions.ts:50",
+    "title": "Declared effects differ from verified effects: Team.rename",
+    "message": "missing db:write; not found in the body: db:read.",
+    "cause": [
+      {
+        "node": "Action:Team.rename",
+        "why": "Declared effects differ from verified effects: Team.rename"
+      }
+    ],
+    "related": [],
+    "fixes": [
+      {
+        "label": "Set effects to [db:write]",
+        "evidence": "effect-scan read the whole body: tx.team.update at src/averri/actions.ts:51:32",
+        "patch": "--- a/src/averri/actions.ts\n+++ b/src/averri/actions.ts\n@@ -47,7 +47,7 @@\n   route: { method: \"PATCH\", path: \"/teams/:teamId\" },\n   input: z.object({ teamId: z.string(), name: z.string().min(1) }),\n   policy: OwnerOrAdmin,\n-  effects: [\"db:read\"],\n+  effects: [\"db:write\"],\n   run: async ({ input, tx }) => tx.team.update({ where: { id: input.teamId }, data: { name: input.name } }),\n });\n \n"
+      }
+    ]
+  },
+  {
+    "code": "A1005",
+    "severity": "warning",
+    "node": "Action:Team.audit",
+    "path": "src/averri/actions.ts:91",
+    "title": "Declaration keys out of canonical order: intent after policy",
+    "message": "Canonical order for action(): intent, route, input, policy, requires, effects. averri fmt is check-only in V0.",
+    "cause": [
+      {
+        "node": "Action:Team.audit",
+        "why": "Declaration keys out of canonical order: intent after policy"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A3005",
+    "severity": "warning",
+    "node": "Contract:Team.audit.requires.isAdmin",
+    "path": "src/averri/actions.ts:96",
+    "title": "Guard could be an expression or predicate: isAdmin",
+    "message": "Replace the guard with e.eq(\"input.role\", \"admin\") so it is serialised, tested and visible to impact.",
+    "cause": [
+      {
+        "node": "Contract:Team.audit.requires.isAdmin",
+        "why": "Guard could be an expression or predicate: isAdmin"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A4003",
+    "severity": "warning",
+    "node": "Event:TeamRemoved",
+    "path": "src/averri/events.ts:11",
+    "title": "Event has no consumer: TeamRemoved",
+    "message": "Declare a workflow({ on }) for it, or mark it external: true when it is consumed outside this repository.",
+    "cause": [
+      {
+        "node": "Event:TeamRemoved",
+        "why": "Event has no consumer: TeamRemoved"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A3005",
+    "severity": "warning",
+    "node": "Contract:Team.Anyone.allow",
+    "path": "src/averri/policies.ts:10",
+    "title": "Guard could be an expression or predicate: allow",
+    "message": "Replace the guard with e.ne(\"actor.id\", \"\") so it is serialised, tested and visible to impact.",
+    "cause": [
+      {
+        "node": "Contract:Team.Anyone.allow",
+        "why": "Guard could be an expression or predicate: allow"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2106",
+    "severity": "warning",
+    "node": "Policy:Team.Anyone",
+    "path": "src/averri/policies.ts:9",
+    "title": "Policy is an opaque guard; auth matrix not derivable: Team.Anyone",
+    "message": "No declaration uses this policy yet.",
+    "cause": [
+      {
+        "node": "Policy:Team.Anyone",
+        "why": "Policy is an opaque guard; auth matrix not derivable: Team.Anyone"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2104",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/teams.ts:13:11",
+    "path": "src/routes/teams.ts:13",
+    "title": "Exposure has no declaration: GET /teams/:teamId/invitations",
+    "message": "No action()/query() declares route GET /teams/:teamId/invitations; `suggest {\"id\": \"Exposure:hono:src/routes/teams.ts:13:11\"}` drafts an observe-mode declaration.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:13:11",
+        "why": "Exposure has no declaration: GET /teams/:teamId/invitations"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2104",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/teams.ts:16:11",
+    "path": "src/routes/teams.ts:16",
+    "title": "Exposure has no declaration: GET /teams/:teamId/stats",
+    "message": "No action()/query() declares route GET /teams/:teamId/stats; `suggest {\"id\": \"Exposure:hono:src/routes/teams.ts:16:11\"}` drafts an observe-mode declaration.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:16:11",
+        "why": "Exposure has no declaration: GET /teams/:teamId/stats"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2104",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/teams.ts:18:11",
+    "path": "src/routes/teams.ts:18",
+    "title": "Exposure has no declaration: DELETE /teams/:teamId",
+    "message": "No action()/query() declares route DELETE /teams/:teamId; `suggest {\"id\": \"Exposure:hono:src/routes/teams.ts:18:11\"}` drafts an observe-mode declaration.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/teams.ts:18:11",
+        "why": "Exposure has no declaration: DELETE /teams/:teamId"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A2103",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+    "path": "src/routes/webhooks.ts:6",
+    "title": "Exposed route has no policy: POST /webhooks/stripe",
+    "message": "No declaration binds this route and none of its middleware (none) is in config.authMiddleware. Declare it with a policy, or with public: true as the explicit opt-out.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+        "why": "Exposed route has no policy: POST /webhooks/stripe"
+      }
+    ],
+    "related": [
+      "Policy:Team.Anyone",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A2104",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+    "path": "src/routes/webhooks.ts:6",
+    "title": "Exposure has no declaration: POST /webhooks/stripe",
+    "message": "No action()/query() declares route POST /webhooks/stripe; `suggest {\"id\": \"Exposure:hono:src/routes/webhooks.ts:6:14\"}` drafts an observe-mode declaration.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+        "why": "Exposure has no declaration: POST /webhooks/stripe"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A5001",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+    "path": "src/routes/webhooks.ts:6",
+    "title": "Webhook route parses the body before verifying stripe-signature",
+    "message": "c.req.json() appears before the code reading the stripe-signature header; signature checks need the raw body (rawBody: true). The generated pitfall.raw-body test is the real check.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+        "why": "inline handler chain calls c.req.json()"
+      },
+      {
+        "node": "Integration:Stripe",
+        "why": "declares webhook.rawBody: true"
+      }
+    ],
+    "related": [
+      "Integration:Stripe"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A5002",
+    "severity": "warning",
+    "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+    "path": "src/routes/webhooks.ts:6",
+    "title": "Webhook handler has no idempotency: POST /webhooks/stripe",
+    "message": "Providers redeliver webhooks; declare idempotency: { key, ttlSeconds } on the integration Stripe to get the duplicate-delivery test, or dedupe on a processed-events table.",
+    "cause": [
+      {
+        "node": "Exposure:hono:src/routes/webhooks.ts:6:14",
+        "why": "Webhook handler has no idempotency: POST /webhooks/stripe"
+      }
+    ],
+    "related": [
+      "Integration:Stripe"
+    ],
+    "fixes": []
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Invitation.invariant",
+    "path": "tests/averri/Invitation.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Invitation.invariant",
+    "message": "tests/averri/Invitation.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Invitation.invariant",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Contract:Invitation.invariant.pendingHasNoAcceptedAt",
+      "Contract:Invitation.invariant.seatsPositive",
+      "Entity:Invitation"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Invitation.invariant"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/MemberInvited.consumer",
+    "path": "tests/averri/MemberInvited.gen.test.ts:1",
+    "title": "Generated test is stale: gen/MemberInvited.consumer",
+    "message": "tests/averri/MemberInvited.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/MemberInvited.consumer",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Event:MemberInvited",
+      "Workflow:InviteFlow"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/MemberInvited.consumer"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Membership.invariant",
+    "path": "tests/averri/Membership.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Membership.invariant",
+    "message": "tests/averri/Membership.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Membership.invariant",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Contract:Membership.invariant.roleIsKnown",
+      "Entity:Membership"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Membership.invariant"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Stripe.pitfall.raw-body",
+    "path": "tests/averri/Stripe.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Stripe.pitfall.raw-body",
+    "message": "tests/averri/Stripe.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Stripe.pitfall.raw-body",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Integration:Stripe"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Stripe.pitfall.raw-body"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Stripe.pitfall.webhook-signature",
+    "path": "tests/averri/Stripe.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Stripe.pitfall.webhook-signature",
+    "message": "tests/averri/Stripe.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Stripe.pitfall.webhook-signature",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Integration:Stripe"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Stripe.pitfall.webhook-signature"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.acceptInvite.auth-matrix",
+    "path": "tests/averri/Team.acceptInvite.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.acceptInvite.auth-matrix",
+    "message": "tests/averri/Team.acceptInvite.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.acceptInvite.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.acceptInvite",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.acceptInvite.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.acceptInvite.postcondition",
+    "path": "tests/averri/Team.acceptInvite.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.acceptInvite.postcondition",
+    "message": "tests/averri/Team.acceptInvite.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.acceptInvite.postcondition",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.acceptInvite",
+      "Contract:Team.acceptInvite.ensures.accepted",
+      "Contract:Team.acceptInvite.ensures.literalRef"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.acceptInvite.postcondition"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.acceptInvite.precondition",
+    "path": "tests/averri/Team.acceptInvite.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.acceptInvite.precondition",
+    "message": "tests/averri/Team.acceptInvite.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.acceptInvite.precondition",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.acceptInvite",
+      "Contract:Team.acceptInvite.requires.isPending",
+      "Contract:Team.acceptInvite.requires.noResultYet",
+      "Contract:Team.acceptInvite.requires.orderable",
+      "Contract:Team.acceptInvite.requires.sameTeam"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.acceptInvite.precondition"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.audit.auth-matrix",
+    "path": "tests/averri/Team.audit.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.audit.auth-matrix",
+    "message": "tests/averri/Team.audit.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.audit.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.audit",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.audit.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.audit.precondition",
+    "path": "tests/averri/Team.audit.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.audit.precondition",
+    "message": "tests/averri/Team.audit.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.audit.precondition",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.audit",
+      "Contract:Team.audit.requires.selfless"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.audit.precondition"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.inviteMember.auth-matrix",
+    "path": "tests/averri/Team.inviteMember.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.inviteMember.auth-matrix",
+    "message": "tests/averri/Team.inviteMember.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.inviteMember.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.inviteMember",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.inviteMember.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.inviteMember.event",
+    "path": "tests/averri/Team.inviteMember.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.inviteMember.event",
+    "message": "tests/averri/Team.inviteMember.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.inviteMember.event",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.inviteMember",
+      "Contract:Team.inviteMember.ensures.eventEmitted",
+      "Event:MemberInvited"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.inviteMember.event"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.inviteMember.pitfall.idempotency",
+    "path": "tests/averri/Team.inviteMember.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.inviteMember.pitfall.idempotency",
+    "message": "tests/averri/Team.inviteMember.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.inviteMember.pitfall.idempotency",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.inviteMember"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.inviteMember.pitfall.idempotency"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.inviteMember.postcondition",
+    "path": "tests/averri/Team.inviteMember.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.inviteMember.postcondition",
+    "message": "tests/averri/Team.inviteMember.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.inviteMember.postcondition",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.inviteMember",
+      "Contract:Team.inviteMember.ensures.pendingForEmail"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.inviteMember.postcondition"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.inviteMember.precondition",
+    "path": "tests/averri/Team.inviteMember.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.inviteMember.precondition",
+    "message": "tests/averri/Team.inviteMember.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.inviteMember.precondition",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.inviteMember",
+      "Contract:Team.inviteMember.requires.notAlreadyMember"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.inviteMember.precondition"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.listInvites.auth-matrix",
+    "path": "tests/averri/Team.listInvites.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.listInvites.auth-matrix",
+    "message": "tests/averri/Team.listInvites.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.listInvites.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Policy:Team.OwnerOrAdmin",
+      "Query:Team.listInvites"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.listInvites.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.remove.auth-matrix",
+    "path": "tests/averri/Team.remove.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.remove.auth-matrix",
+    "message": "tests/averri/Team.remove.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.remove.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.remove",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.remove.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.rename.auth-matrix",
+    "path": "tests/averri/Team.rename.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.rename.auth-matrix",
+    "message": "tests/averri/Team.rename.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.rename.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Action:Team.rename",
+      "Policy:Team.OwnerOrAdmin"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.rename.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A6001",
+    "severity": "warning",
+    "node": "Test:gen/Team.stats.auth-matrix",
+    "path": "tests/averri/Team.stats.gen.test.ts:1",
+    "title": "Generated test is stale: gen/Team.stats.auth-matrix",
+    "message": "tests/averri/Team.stats.gen.test.ts does not exist.",
+    "cause": [
+      {
+        "node": "Test:gen/Team.stats.auth-matrix",
+        "why": "generated file missing"
+      }
+    ],
+    "related": [
+      "Policy:Team.OwnerOrAdmin",
+      "Query:Team.stats"
+    ],
+    "fixes": [
+      {
+        "label": "Regenerate",
+        "evidence": "the generated file is missing",
+        "command": "averri testgen --only Test:gen/Team.stats.auth-matrix"
+      }
+    ]
+  },
+  {
+    "code": "A4002",
+    "severity": "info",
+    "node": "Action:Team.acceptInvite",
+    "path": "src/averri/actions.ts:86",
+    "title": "Declared effects are unverified: Team.acceptInvite has no handler to scan",
+    "message": "Observe mode without handler: effects [db:write] are taken as declared (effects.verified.complete = false). Add handler: <fn> to let effect-scan verify them.",
+    "cause": [
+      {
+        "node": "Action:Team.acceptInvite",
+        "why": "Declared effects are unverified: Team.acceptInvite has no handler to scan"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  },
+  {
+    "code": "A4002",
+    "severity": "info",
+    "node": "Action:Team.audit",
+    "path": "src/averri/actions.ts:99",
+    "title": "Declared effects are unverified: Team.audit has no handler to scan",
+    "message": "Observe mode without handler: effects [] are taken as declared (effects.verified.complete = false). Add handler: <fn> to let effect-scan verify them.",
+    "cause": [
+      {
+        "node": "Action:Team.audit",
+        "why": "Declared effects are unverified: Team.audit has no handler to scan"
+      }
+    ],
+    "related": [],
+    "fixes": []
+  }
+]

@@ -1,23 +1,23 @@
-# SPEC-DECLARATIONS — The `@averr/core` declaration API
+# SPEC-DECLARATIONS — The `@averri/core` declaration API
 
-Status: normative for V0. Types: `packages/core/src/types.ts`. Implemented by `@averr/core` (constructors, builders, `defineConfig`) and `@averr/contracts` (runtime pipeline, adapters, observe wrapper). Lowered to IR by `@averr/compiler`. Decisions that deviate from the FINAL design document are logged in `SPEC-DECISIONS.md` (`D-n`).
+Status: normative for V0. Types: `packages/core/src/types.ts`. Implemented by `@averri/core` (constructors, builders, `defineConfig`) and `@averri/contracts` (runtime pipeline, adapters, observe wrapper). Lowered to IR by `@averri/compiler`. Decisions that deviate from the FINAL design document are logged in `SPEC-DECISIONS.md` (`D-n`).
 
 ## 1. Design rules
 
-1. **Seven constructs plus two builders, one spelling each.** `entity`, `policy`, `action`, `query`, `event`, `workflow`, `integration`, and the two builders `e`, `db`. Tier-3 contracts are bare async functions (D-1). No aliases, no sugar, no string mini-DSLs. `averr fmt` checks the key order shown in §4 (A1005, check-only in V0).
+1. **Seven constructs plus two builders, one spelling each.** `entity`, `policy`, `action`, `query`, `event`, `workflow`, `integration`, and the two builders `e`, `db`. Tier-3 contracts are bare async functions (D-1). No aliases, no sugar, no string mini-DSLs. `averri fmt` checks the key order shown in §4 (A1005, check-only in V0).
 2. **Every closed option is a literal union.** `effects`, `route.method`, `engine`, payload types, `retry.backoff`, `webhook.scheme`: tsc rejects a hallucinated value before the compiler runs. `policy | public` is exclusive-or by type; observe mode requires `route` by type.
 3. **TypeScript is the host, not the analyzer, and the compiler never runs your code.** The compiler lowers declaration call expressions STATICALLY with ts-morph from the statically analysable subset in §4.1 (D-2). It never imports a user module (no Prisma connection, no Inngest or Stripe client is created at build time). tsc is a backstop.
-4. **The project's own Prisma client is used in handlers.** Averr never wraps data access; it scans `tx.<model>.<op>` calls to verify effects (SPEC-IR §3.1).
-5. **Nothing is generated into the application in V0.** Routes, schemas, migrations and idempotency tables stay where they are (D-11). Averr generates tests, OpenAPI and spec cards only.
+4. **The project's own Prisma client is used in handlers.** Averri never wraps data access; it scans `tx.<model>.<op>` calls to verify effects (SPEC-IR §3.1).
+5. **Nothing is generated into the application in V0.** Routes, schemas, migrations and idempotency tables stay where they are (D-11). Averri generates tests, OpenAPI and spec cards only.
 6. **Observe mode is the default adoption path; declared mode is a strict superset.** An agent that learned observe mode relearns nothing.
 
 ## 2. Project types (augmentation)
 
 ```ts
-// src/averr.d.ts — written by `averr init` when @prisma/client is detected
+// src/averri.d.ts — written by `averri init` when @prisma/client is detected
 import type { PrismaClient, Prisma } from "@prisma/client";
-declare module "@averr/core" {
-  interface AverrTypes {
+declare module "@averri/core" {
+  interface AverriTypes {
     Actor: { id: string; orgId: string; role: "owner" | "admin" | "member" };
     PrismaClient: PrismaClient;
     TransactionClient: Prisma.TransactionClient;
@@ -39,7 +39,7 @@ Without augmentation `Actor` is `{ id: string; [k: string]: unknown }`, the clie
 ```ts
 // src/members/inviteMember.ts
 import { z } from "zod";
-import { entity, policy, action, event, workflow, e, db } from "@averr/core";
+import { entity, policy, action, event, workflow, e, db } from "@averri/core";
 import { inngest } from "../inngest";
 import { sendInviteEmail } from "../email";
 import { allowlist } from "../allowlist";
@@ -69,7 +69,7 @@ export const InviteMember = action("Team.inviteMember", {
   requires: {
     notAlreadyMember: db.none("membership", { teamId: e.input("teamId"), user: { email: e.input("email") } }),
     emailDomainAllowed: async ({ input, actor }) =>                  // tier 3 (opaque guard): external allowlist
-      allowlist.check(actor.orgId, input.email),                     // input/actor typed from `input` and AverrTypes
+      allowlist.check(actor.orgId, input.email),                     // input/actor typed from `input` and AverriTypes
   },
   ensures: {
     pendingForEmail: e.and(e.eq("result.email", e.input("email")), e.eq("result.status", "pending")),
@@ -90,15 +90,15 @@ export const InviteMember = action("Team.inviteMember", {
 
 export const InviteFlow = workflow("InviteFlow", {
   on: MemberInvited,
-  runner: inngest.createFunction({ id: "invite-flow" }, { event: "averr/MemberInvited" }, async ({ event, step }) => {
+  runner: inngest.createFunction({ id: "invite-flow" }, { event: "averri/MemberInvited" }, async ({ event, step }) => {
     await step.run("email", () => sendInviteEmail(event.data.email, event.data.invitationId));
-    await step.waitForEvent("accepted", { event: "averr/InvitationAccepted", timeout: "7d" });
+    await step.waitForEvent("accepted", { event: "averri/InvitationAccepted", timeout: "7d" });
   }),
   retry: { attempts: 3 },
 });
 ```
 
-Canonical key order checked by `averr fmt` (A1005): `intent, route, input, output, policy | public, subject, requires, ensures, effects, idempotency, transaction, run | handler, owner, tags`. Clause order inside `requires`/`ensures` is left alone: evaluation order is tier 1, tier 2, then guards (SPEC-CONTRACTS §6), independent of source order.
+Canonical key order checked by `averri fmt` (A1005): `intent, route, input, output, policy | public, subject, requires, ensures, effects, idempotency, transaction, run | handler, owner, tags`. Clause order inside `requires`/`ensures` is left alone: evaluation order is tier 1, tier 2, then guards (SPEC-CONTRACTS §6), independent of source order.
 
 From this the compiler derives (no application code generated): the IR nodes and edges in SPEC-IR §9; diagnostics A2101 if the route is missing; the generated Vitest suites in SPEC-CONTRACTS §9 (auth matrix over the configured actor fixtures; `notAlreadyMember` violation → 412 with the Contract id; a fast-check property for `pendingForEmail`; exactly one `MemberInvited`; `InviteFlow` consumer exists); an OpenAPI entry; a spec card. The guard is listed as opaque and gets no test.
 
@@ -107,7 +107,7 @@ From this the compiler derives (no application code generated): the IR nodes and
 The compiler lowers a declaration from its call expression without evaluating anything. Option values MUST be built from:
 
 - object literals, array literals, string/number/boolean/`null` literals and template literals without substitutions;
-- call chains on `e`, `db` imported from `@averr/core` (`e.and(e.eq(...), ...)`, `db.none(...)`), including through a local `const` alias;
+- call chains on `e`, `db` imported from `@averri/core` (`e.and(e.eq(...), ...)`, `db.none(...)`), including through a local `const` alias;
 - identifier references to other declaration `const`s in the project (`OwnerOrAdmin`, `MemberInvited`, `Invitation`), resolved by symbol to their declaring call;
 - `z.*` chains (`z.object({...})`, `.extend`, `.merge`, `.optional`, imported schemas): the compiler records a `SymbolRef` and derives field names and types from the TypeChecker type of `z.output<typeof schema>`;
 - member/identifier references for `run`, `handler`, `runner`, `client` (recorded as `SymbolRef`s; bodies are scanned, never executed);
@@ -129,7 +129,7 @@ One `allow` clause over `input` and `actor` only. Evaluated in the `authorize` p
 
 A state-changing operation. Exactly one of `policy` or `public: true` (type-enforced). `route` is optional in declared mode (internal actions) and required in observe mode; when present it MUST match an Exposure (A2101). `effects` is required so the agent states what it believes; `effect-scan` verifies (A4002). Mode is decided by shape: `run` present → declared; otherwise observe.
 
-**Declared mode** (`run`): the pipeline below is owned by `@averr/contracts` and is the single normative order (identical in SPEC-CONTRACTS §8 and core `ActionContext`):
+**Declared mode** (`run`): the pipeline below is owned by `@averri/contracts` and is the single normative order (identical in SPEC-CONTRACTS §8 and core `ActionContext`):
 
 ```
 validate (Zod)                → 400 ValidationFailed
@@ -158,15 +158,15 @@ A declared read. Has `policy | public`, `input`, `output`, and `run` (`ctx.db`, 
 
 ### 5.5 `event(name, options)`
 
-Flat payload with `PayloadType` values. `external: true` suppresses A4003. `emit(Event, payload)` is typed from the payload shape. The compiler verifies every `emit` target is declared (A4001). Workflow runners subscribe to the project's own event name; Averr does not provide an event bus. The bridge from `emit` to the project's emitter/queue is configured once in `averr.config.ts` (`emitter: { publish, spy, eventNamePrefix: "averr/" }`, §9); `eventNamePrefix` is a plain string so `consumer-scan` can match `createFunction(_, { event: "averr/MemberInvited" })` statically.
+Flat payload with `PayloadType` values. `external: true` suppresses A4003. `emit(Event, payload)` is typed from the payload shape. The compiler verifies every `emit` target is declared (A4001). Workflow runners subscribe to the project's own event name; Averri does not provide an event bus. The bridge from `emit` to the project's emitter/queue is configured once in `averri.config.ts` (`emitter: { publish, spy, eventNamePrefix: "averri/" }`, §9); `eventNamePrefix` is a plain string so `consumer-scan` can match `createFunction(_, { event: "averri/MemberInvited" })` statically.
 
 ### 5.6 `workflow(name, options)`
 
-Binds `on: Event` to a `runner` object from Inngest, pg-boss or custom code. Averr never executes runners; it resolves `runner` to a `SymbolRef`, adds `consumedBy` edges, infers `engine` from the runner's import, scans `step.run("name")` literals, and generates the consumer-exists test. `retry` is recorded as a fact and compared with the runner's own configuration when the engine exposes it.
+Binds `on: Event` to a `runner` object from Inngest, pg-boss or custom code. Averri never executes runners; it resolves `runner` to a `SymbolRef`, adds `consumedBy` edges, infers `engine` from the runner's import, scans `step.run("name")` literals, and generates the consumer-exists test. `retry` is recorded as a fact and compared with the runner's own configuration when the engine exposes it.
 
 ### 5.7 `integration(name, options)`
 
-Declares a foreign client and its pitfalls. `webhook: { verify, scheme, secretEnv?, rawBody, route? }`: `scheme` (`"stripe" | "hmac-sha256" | "custom"`) and `secretEnv` tell the test generator how to sign bodies; `rawBody: true` adds the `pitfall.raw-body` test and A5001 (warning, no fix). `idempotency` generates the duplicate-delivery test and suppresses A5002. `nonTransactional` (default `true`) makes `effect-scan` report A4005 when the client is called inside a Averr-owned transaction.
+Declares a foreign client and its pitfalls. `webhook: { verify, scheme, secretEnv?, rawBody, route? }`: `scheme` (`"stripe" | "hmac-sha256" | "custom"`) and `secretEnv` tell the test generator how to sign bodies; `rawBody: true` adds the `pitfall.raw-body` test and A5001 (warning, no fix). `idempotency` generates the duplicate-delivery test and suppresses A5002. `nonTransactional` (default `true`) makes `effect-scan` report A4005 when the client is called inside a Averri-owned transaction.
 
 ### 5.8 Tier-3 clauses (guards)
 
@@ -201,7 +201,7 @@ export const InviteMember = action("Team.inviteMember", {
 
 What observe mode does (normative detail in SPEC-CONTRACTS §8):
 
-- Under Vitest only, through `observe(app, { declarations, config })` from `@averr/contracts`. It wraps at the fetch boundary (`app.fetch(req)` for Hono; `http.createServer(app)` on an ephemeral port for Express) and matches requests against declared routes with Averr's own matcher. It never registers middleware and never calls `handler`.
+- Under Vitest only, through `observe(app, { declarations, config })` from `@averri/contracts`. It wraps at the fetch boundary (`app.fetch(req)` for Hono; `http.createServer(app)` on an ephemeral port for Express) and matches requests against declared routes with Averri's own matcher. It never registers middleware and never calls `handler`.
 - For a matching request: parses `input` (`{ ...body|query, ...params }`) with the declared Zod schema; reads the subject row and the rows of entities with invariants (test database); evaluates `requires`; lets the real handler run; re-reads; evaluates `ensures` with `result` = parsed response body (only when status is 2xx), `emitted` from the spy on `config.emitter.spy`.
 - Records an `ActionTrace` per request (with the Vitest test file and title); feeds generated tests and `explain`.
 - Records the handler's own `401`/`403` as the policy decision (`observed: true`) and evaluates the declared policy AST against the fixture actor so the auth-matrix test can compare them.
@@ -213,11 +213,11 @@ What observe mode does not do:
 - Own a transaction, provide idempotency storage, publish events, or change a response. A failing contract fails the test; the app is untouched.
 - Generate tests for guards.
 
-Moving to declared mode is: add `run`, optionally add `transaction`/`subject`, and route the Exposure's handler to `toHono(InviteMember, { actor: (c) => c.get("user") ?? null })` (or `toExpress(InviteMember, { actor: (req) => req.user ?? null })`) from `@averr/contracts`. The adapters build `input` as `{ ...(GET ? query : body), ...params }` (path params win, D-20), default to status 200, and serialise `Date` → ISO string and `Decimal`/`BigInt` → string. The A2101 fix recognises a `toHono(<Decl>, …)`/`toExpress(<Decl>, …)` argument as the Exposure's handler. Ids, contracts, tests and spec cards are unchanged.
+Moving to declared mode is: add `run`, optionally add `transaction`/`subject`, and route the Exposure's handler to `toHono(InviteMember, { actor: (c) => c.get("user") ?? null })` (or `toExpress(InviteMember, { actor: (req) => req.user ?? null })`) from `@averri/contracts`. The adapters build `input` as `{ ...(GET ? query : body), ...params }` (path params win, D-20), default to status 200, and serialise `Date` → ISO string and `Decimal`/`BigInt` → string. The A2101 fix recognises a `toHono(<Decl>, …)`/`toExpress(<Decl>, …)` argument as the Exposure's handler. Ids, contracts, tests and spec cards are unchanged.
 
 ## 7. Spec card (human projection)
 
-`averr docs` renders every Action/Query to ≤ 15 lines:
+`averri docs` renders every Action/Query to ≤ 15 lines:
 
 ```
 ## Team.inviteMember — POST /teams/:teamId/invitations
@@ -236,14 +236,14 @@ Owner: team-platform · Last change: a1f3c9 add-contract requires.emailDomainAll
 
 Release gate on the reference app: a non-engineer reviews a PR from spec-card diffs alone.
 
-## 8. `averr suggest`
+## 8. `averri suggest`
 
 Drafts observe-mode declarations for undeclared Exposures (SPEC-MCP §6.8): route and input from the extractor, policy from siblings, `requires` from `if (...) return 4xx` guards, `intent: "TODO"`. Output is a diff for a human to approve in a PR; never applied automatically.
 
-## 9. Configuration (`averr.config.ts`)
+## 9. Configuration (`averri.config.ts`)
 
 ```ts
-import { defineConfig } from "@averr/core";
+import { defineConfig } from "@averri/core";
 import { inngest } from "./src/inngest";
 
 export default defineConfig({
@@ -259,20 +259,20 @@ export default defineConfig({
     admin:          { actor: { id: "u_admin",  orgId: "o1", role: "admin"  }, headers: { authorization: "Bearer admin"  } },
   },
   emitter: {
-    eventNamePrefix: "averr/",
-    publish: (name, payload) => inngest.send({ name: `averr/${name}`, data: payload }),   // declared mode
+    eventNamePrefix: "averri/",
+    publish: (name, payload) => inngest.send({ name: `averri/${name}`, data: payload }),   // declared mode
     spy: { target: inngest, method: "send" },                                               // observe mode
   },
   sampling: { ensures: 0, invariants: 0 },               // production only; default
-  test: { databaseUrlEnv: "DATABASE_URL", generatedDir: "tests/averr" },   // default; the project supplies the test DB
+  test: { databaseUrlEnv: "DATABASE_URL", generatedDir: "tests/averri" },   // default; the project supplies the test DB
 });
 ```
 
-The compiler lowers the static fields (`sourceRoots`, `prismaSchema`, `prismaClient`, `entryPoints`, `publicMarker`, `authMiddleware`, `emitter.eventNamePrefix`, fixture names, `test`) with ts-morph under the §4.1 rule and never imports the file; `@averr/contracts` imports it under Vitest and at runtime for `actors`, `emitter.publish` and `emitter.spy`. Fixture names are project-defined (D-19); the auth matrix iterates all of them.
+The compiler lowers the static fields (`sourceRoots`, `prismaSchema`, `prismaClient`, `entryPoints`, `publicMarker`, `authMiddleware`, `emitter.eventNamePrefix`, fixture names, `test`) with ts-morph under the §4.1 rule and never imports the file; `@averri/contracts` imports it under Vitest and at runtime for `actors`, `emitter.publish` and `emitter.spy`. Fixture names are project-defined (D-19); the auth matrix iterates all of them.
 
 ## 10. Implementation notes
 
-- **`@averr/core`**: constructors return frozen plain objects (`{ kind, id|name, mode?, options }`) plus, for `event`, the `id`. **No registry and no import-time side effects** (D-2). `e`/`db` build AST, normalise bare paths and flatten nested `where` objects. `defineConfig` fills defaults and freezes. Zero dependencies at runtime except `zod` as a peer.
-- **`@averr/compiler`**: lowers declaration call expressions with ts-morph per §4.1: object-literal properties → node fields; identifier references → resolved by symbol to the declaring call or to a `SymbolRef`; `run`/`handler` bodies → `effect-scan`, `emit-scan`, handler line counts; Zod field names/types from the checker. It does not import `@averr/core` (ARCHITECTURE §2). Non-analysable values → A1004.
-- **`@averr/contracts`**: `handle(decl)` returns `(input, actor) => Promise<HandleResult>`; `toHono(decl, options)` and `toExpress(decl, options)` are the adapters; `observe(app, options)` is the Vitest wrapper returning `{ request(fixture, req), close() }`. All record `ActionTrace`s to `.averr/traces/<date>.<pid>.jsonl`.
+- **`@averri/core`**: constructors return frozen plain objects (`{ kind, id|name, mode?, options }`) plus, for `event`, the `id`. **No registry and no import-time side effects** (D-2). `e`/`db` build AST, normalise bare paths and flatten nested `where` objects. `defineConfig` fills defaults and freezes. Zero dependencies at runtime except `zod` as a peer.
+- **`@averri/compiler`**: lowers declaration call expressions with ts-morph per §4.1: object-literal properties → node fields; identifier references → resolved by symbol to the declaring call or to a `SymbolRef`; `run`/`handler` bodies → `effect-scan`, `emit-scan`, handler line counts; Zod field names/types from the checker. It does not import `@averri/core` (ARCHITECTURE §2). Non-analysable values → A1004.
+- **`@averri/contracts`**: `handle(decl)` returns `(input, actor) => Promise<HandleResult>`; `toHono(decl, options)` and `toExpress(decl, options)` are the adapters; `observe(app, options)` is the Vitest wrapper returning `{ request(fixture, req), close() }`. All record `ActionTrace`s to `.averri/traces/<date>.<pid>.jsonl`.
 - Order of implementation: observe mode first (benchmark arm B), declared mode second (arm B+), external security review before declared mode is announced.

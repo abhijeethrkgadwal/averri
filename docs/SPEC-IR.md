@@ -1,6 +1,6 @@
-# SPEC-IR — The Averr Semantic IR
+# SPEC-IR — The Averri Semantic IR
 
-Status: normative for V0. Implemented by `@averr/ir` (types, schemas) and produced by `@averr/compiler`.
+Status: normative for V0. Implemented by `@averri/ir` (types, schemas) and produced by `@averri/compiler`.
 Source of truth for types: `packages/ir/src/types.ts`. Where this document and that file disagree, the file wins and this document has a bug. Decisions that deviate from the FINAL design document or from review findings are logged in `SPEC-DECISIONS.md` (`D-n`).
 
 The key words MUST, MUST NOT, SHOULD, MAY are to be interpreted as in RFC 2119.
@@ -9,11 +9,11 @@ The key words MUST, MUST NOT, SHOULD, MAY are to be interpreted as in RFC 2119.
 
 The Semantic IR is a typed property graph describing a TypeScript backend on Prisma + Hono/Express + Zod: its entities, actions, policies, contracts, events, workflows, integrations, HTTP exposures, tests and source modules, plus the edges between them.
 
-- The IR is **derived**. It is a pure function of (repository content, Averr version). It MUST NOT be committed, hand-edited or patched.
-- The IR is a **cache**. It lives in `.averr/graph.json` (gitignored), is rebuilt on demand by content hash, and MUST validate against `GraphSchema` when read back. A cache that fails validation MUST be discarded and rebuilt.
+- The IR is **derived**. It is a pure function of (repository content, Averri version). It MUST NOT be committed, hand-edited or patched.
+- The IR is a **cache**. It lives in `.averri/graph.json` (gitignored), is rebuilt on demand by content hash, and MUST validate against `GraphSchema` when read back. A cache that fails validation MUST be discarded and rebuilt.
 - The IR carries **provenance** on every node and edge: `extracted`, `declared` or `verified`. Tools MUST surface provenance; they MUST NOT present an extracted fact as verified.
 - The IR stores contracts as a **serializable AST**, never as function source. Opaque guards are recorded as opaque.
-- The IR is built **statically**. The compiler reads source with ts-morph and `@mrleebo/prisma-ast`; it never evaluates user modules (D-2). "Schema facts" below means what the Prisma extractor derives from `schema.prisma`; Averr does not use the DMMF.
+- The IR is built **statically**. The compiler reads source with ts-morph and `@mrleebo/prisma-ast`; it never evaluates user modules (D-2). "Schema facts" below means what the Prisma extractor derives from `schema.prisma`; Averri does not use the DMMF.
 
 ## 2. Identity
 
@@ -43,7 +43,7 @@ Rules:
 - When an id disappears between two builds and a new id appears whose `run`/`handler` symbol reference is identical, the compiler MUST report A1002 (rename) and the diff MUST emit a `rename` op rather than `remove` + `add`. Tie rule: if the symbol is shared by two or more declarations on either side (two observe-mode declarations referencing one handler), no rename is reported.
 - Exposure ids change when a route registration moves. This is accepted: Exposures are extracted facts, and an Action's `route.exposure` is re-resolved on every build. Tools MUST NOT persist Exposure ids across builds. The column makes two registrations on one line (loops, chained calls) distinct.
 - Clause names starting with `$` are reserved for synthetic contracts (`requires.$subject`); declaring one is A1004.
-- Ids are not file-safe. Every id-derived path under `.averr/` (cards, snapshots of a node) uses `encodeURIComponent(id)` (`nodeIdToFileName` in @averr/ir, D-24).
+- Ids are not file-safe. Every id-derived path under `.averri/` (cards, snapshots of a node) uses `encodeURIComponent(id)` (`nodeIdToFileName` in @averri/ir, D-24).
 
 ### 2.2 Paths and positions
 
@@ -62,7 +62,7 @@ type Provenance =
 ```
 
 - `extracted` nodes MUST carry at least one `Evidence` and a `confidence` in `[0, 1]`. Each extractor MUST document how it computes confidence (the route extractors' table is in §4.1).
-- `declared` nodes come from `@averr/core` declaration modules lowered by ts-morph. `declaredAt` is the call expression span.
+- `declared` nodes come from `@averri/core` declaration modules lowered by ts-morph. `declaredAt` is the call expression span.
 - `verified` is `declared` plus confirmation by **every applicable** static verifier (D-9). `verifiers` lists them all. Applicability: `route-match` when the declaration has `route`; `effect-scan` whenever a `run`/`handler` body is resolvable; `emit-scan` when `event:emit` is declared or an `emitted` clause exists; `zod-match` when `input` resolves to a Zod schema; `consumer-scan` for Events with `external: false`; `test-link` for hand-written Tests. If any applicable verifier fails, the node stays `declared` and the per-field flags (`route.verified`, `effects.verified`) show which one.
 
 | Verifier | What it confirms |
@@ -72,7 +72,7 @@ type Provenance =
 | `emit-scan` | `emit(Event, ...)` calls in `run` match declared `ensures` `emitted` clauses / `event:emit` effect |
 | `zod-match` | the `input` Zod schema's top-level keys exist and agree in type with Prisma fields they are compared to |
 | `consumer-scan` | a `workflow({ on })` or integration consumer exists for an Event (matching `eventNamePrefix + name` in runner registrations) |
-| `test-link` | a Test file imports/asserts a node id (`// @averr covers Action:...` header) |
+| `test-link` | a Test file imports/asserts a node id (`// @averri covers Action:...` header) |
 
 - Edges carry their own provenance. A `writes` edge from `effect-scan` is `verified`; a `writes` edge the extractor inferred from a bare `prisma.x.update` call in an undeclared handler is `extracted`.
 - Tools MUST refuse to state an extracted fact with confidence below 0.9 as an answer. They MUST instead return the node with a `verify` note and a `read_source` hint (SPEC-MCP §5).
@@ -85,7 +85,7 @@ The only verifier with non-trivial semantics; it is fully specified so A4002 is 
 2. **Accessor → Entity.** `client.<accessor>` maps to the Entity whose `clientName` (= `Uncapitalize(model)`, e.g. `OAuthToken` → `oAuthToken`) equals the accessor. Unknown accessors are ignored and set `complete: false`.
 3. **Operations.** Writes: `create, createMany, createManyAndReturn, update, updateMany, upsert, delete, deleteMany, $executeRaw, $executeRawUnsafe`. Reads: `findUnique, findUniqueOrThrow, findFirst, findFirstOrThrow, findMany, count, aggregate, groupBy, $queryRaw, $queryRawUnsafe`. `$transaction(fn)` recurses into `fn` with its parameter as a client; `$transaction([...])` scans the array elements. Raw ops record the effect without an Entity.
 4. **Interprocedural depth.** Project-local callees that receive a client as an argument are followed to depth 3 (`run → service.invite(tx, …) → repo.upsert(tx, …)`). Anything beyond that, dynamic member access (`client[name]`), or a client escaping into an external package sets `effects.verified.complete = false`.
-5. **Other effects.** `emit(Event, …)` calls → `emits`; calls on a declared `integration.client` symbol → `calls` (and A4005 when inside a Averr-owned transaction, i.e. within `run` of a `transaction !== false` action).
+5. **Other effects.** `emit(Event, …)` calls → `emits`; calls on a declared `integration.client` symbol → `calls` (and A4005 when inside a Averri-owned transaction, i.e. within `run` of a `transaction !== false` action).
 6. **A4002 rule.** Let `V` = `{ db:write if verified.writes ≠ ∅, db:read if verified.reads ≠ ∅ (body only), event:emit if verified.emits ≠ ∅, network if verified.calls ≠ ∅ }`. With `complete: true`, A4002 fires when `declared ≠ V` and the fix patches `effects` to `V`; with `complete: false`, A4002 fires only when `V ⊄ declared` and the fix only adds. Predicate and policy reads never require `db:read`. Observe-mode declarations without `handler` have `complete: false` and A4002 at `info`.
 
 ## 4. Node kinds
@@ -114,7 +114,7 @@ Full field lists are in `types.ts`. Semantics that are not obvious from the type
 
 **Test.** Generated Test nodes are **derived from the graph** (one per `(owner, suite)` that SPEC-CONTRACTS §9 produces), not extracted from generated files (D-13); their `sourceHash` is the hash of the declaration content they derive from, and A6001 compares it with the `hash:` field of the `@generated` header on disk (missing file = stale). Hand-written tests are extracted from Vitest files and linked by `test-link`. `lastResult` is updated by `check`, never by `build`.
 
-**Module.** Every source file the extractor visited. `role` classifies it (`config` for `averr.config.ts`); `hash` and `lines` feed the content hash and the handler-line ratio.
+**Module.** Every source file the extractor visited. `role` classifies it (`config` for `averri.config.ts`); `hash` and `lines` feed the content hash and the handler-line ratio.
 
 ### 4.1 Route extraction (Hono and Express)
 
@@ -161,14 +161,14 @@ Direction is `from -> to`. The permitted endpoint table is in `types.ts` (`EDGE_
 
 ```ts
 interface Graph {
-  meta: GraphMeta;              // schemaVersion, averrVersion, builtAt, commit, dirty, contentHash, root, stack, counts, health
+  meta: GraphMeta;              // schemaVersion, averriVersion, builtAt, commit, dirty, contentHash, root, stack, counts, health
   nodes: Record<NodeId, Node>;
   edges: Edge[];
   diagnostics: Diagnostic[];    // compiler diagnostics of this build (not test results)
 }
 ```
 
-- `meta.contentHash` is sha256 over the sorted list of `(path, sha256(content))` for all input files: every `.ts`/`.tsx` under `config.sourceRoots`, `schema.prisma`, `package.json`, `averr.config.*`, and hand-written test files. Generated tests under `config.test.generatedDir` are **excluded** (they are an output of the build, D-13); A6001 compares them separately. It is the staleness key for SPEC-MCP §4 and the snapshot key (§7).
+- `meta.contentHash` is sha256 over the sorted list of `(path, sha256(content))` for all input files: every `.ts`/`.tsx` under `config.sourceRoots`, `schema.prisma`, `package.json`, `averri.config.*`, and hand-written test files. Generated tests under `config.test.generatedDir` are **excluded** (they are an output of the build, D-13); A6001 compares them separately. It is the staleness key for SPEC-MCP §4 and the snapshot key (§7).
 - `meta.commit` is HEAD or `null` outside git; `meta.dirty` says whether the working tree differs from HEAD. Both are reported on every MCP response.
 - `meta.counts` has one integer per `NodeKind`. `meta.health` has the counters in `HealthCounters`; `overview` renders them verbatim.
 - `nodes` is keyed by id; `Object.keys(nodes).length === sum(counts)` MUST hold.
@@ -185,7 +185,7 @@ History is not stored. `inspect include: ["history"]` and `impact {diff}` comput
 - `weaken-contract` / `strengthen-contract` when a Contract's AST changes. Weakening is decided by the table in SPEC-CONTRACTS §7; when the rule cannot decide, the op is `change` and the PR bot MUST flag it for review.
 - `add-edge` / `remove-edge` for non-`dependsOn` edges; `node` is the edge's `from`, `target` is `<kind>:<from>-><to>`.
 
-Snapshots are cached in `.averr/snapshots/<contentHash>.json` (keyed by content hash, not commit, so dirty trees have snapshots too; D-14); they follow the same schema and validation rule and are LRU-pruned to 20, except the snapshot referenced by `last-green.json`, which is pinned. `history` is bounded: walk at most 20 commits from `git log -- <node.src.file>`, reuse snapshots, stop after 10 ops or 10 s, and report `truncated: true`.
+Snapshots are cached in `.averri/snapshots/<contentHash>.json` (keyed by content hash, not commit, so dirty trees have snapshots too; D-14); they follow the same schema and validation rule and are LRU-pruned to 20, except the snapshot referenced by `last-green.json`, which is pinned. `history` is bounded: walk at most 20 commits from `git log -- <node.src.file>`, reuse snapshots, stop after 10 ops or 10 s, and report `truncated: true`.
 
 ## 8. Health counters
 
@@ -259,7 +259,7 @@ Edges (provenance omitted): `Policy:Team.OwnerOrAdmin -authorizes-> Action:Team.
 - Prisma facts come from `@mrleebo/prisma-ast`, not `@prisma/internals` `getDMMF` (not installed); the derived set is enumerated in the `types.ts` header.
 - Exposure ids carry a column; `verified` provenance carries the list of verifiers; `dependsOn` is a directed propagation table. See `SPEC-DECISIONS.md`.
 
-## 11. Implementation notes for `@averr/ir`
+## 11. Implementation notes for `@averri/ir`
 
 - Export everything from `types.ts` via `index.ts`. Add small pure helpers only: `nodeId(kind, qualifier)`, `parseNodeId(id)`, `contractId(owner, phase, clause | null)` (`clause` is `null` for `allow`), `nodeIdToFileName(id)` (= `encodeURIComponent`), `tierOf(expr | fn)`, `isDbOp(op)`, `sortGraph(graph)`, `validateGraph(json): Graph` (wraps `GraphSchema.parse`), `diffGraphs(base, head): GraphDiff`. No file IO, no ts-morph, no Prisma in this package.
 - `validateGraph` MUST reject `schemaVersion !== GRAPH_SCHEMA_VERSION`; callers rebuild.

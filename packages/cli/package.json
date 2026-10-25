@@ -1,16 +1,30 @@
 {
-  "name": "@averr/cli",
+  "name": "@averri/cli",
   "version": "0.0.1",
-  "description": "Averr cli package",
+  "description": "Averri command line: init, build, check, docs, report, fmt, testgen, suggest, mcp and the --json tool mirrors",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "bin": {
+    "averri": "./src/bin.ts"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/compiler": "0.0.1",
+    "@averri/ir": "0.0.1",
+    "@averri/mcp": "0.0.1",
+    "@averri/testgen": "0.0.1",
+    "commander": "^14.0.0",
+    "picocolors": "^1.1.1",
+    "ts-morph": "^28.0.0"
   }
 }

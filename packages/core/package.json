@@ -1,7 +1,7 @@
 {
-  "name": "@averr/core",
+  "name": "@averri/core",
   "version": "0.0.1",
-  "description": "Averr core package",
+  "description": "Averri declaration API: entity, policy, action, query, event, workflow, integration, the e/db contract builders and defineConfig",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -12,5 +12,11 @@
   "files": ["src"],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/ir": "0.0.1"
+  },
+  "peerDependencies": {
+    "zod": "^4.0.0"
   }
 }

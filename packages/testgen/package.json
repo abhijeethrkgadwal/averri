@@ -1,7 +1,7 @@
 {
-  "name": "@averr/testgen",
+  "name": "@averri/testgen",
   "version": "0.0.1",
-  "description": "Averr testgen package",
+  "description": "Averri test generator: derives tests/averri/*.gen.test.ts (auth matrix, precondition, postcondition, event, consumer, invariant, pitfall suites) from the Semantic IR",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -12,5 +12,16 @@
   "files": ["src"],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/ir": "0.0.1"
+  },
+  "peerDependencies": {
+    "fast-check": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "fast-check": {
+      "optional": true
+    }
   }
 }

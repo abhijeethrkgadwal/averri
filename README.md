@@ -1,11 +1,11 @@
-# Averr
+# Averri
 
 ![status: pre-alpha, V0 in progress](https://img.shields.io/badge/status-pre--alpha%2C%20V0%20in%20progress-orange)
 ![license: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)
 
-**Averr is a contract and semantic-graph layer for agent-written TypeScript backends.** You declare, in ordinary TypeScript, what each action requires, what it ensures, and who may call it. A compiler turns those declarations into a verified graph of your backend (entities, actions, policies, events, workflows, routes, effects), checks them against the handler code that actually runs, generates tests from them (auth matrices, precondition boundaries, postcondition properties, known third-party pitfalls), and exposes the whole thing to coding agents through six small MCP tools and a `--json` CLI. It attaches to an existing Prisma + Hono/Express + Zod repo without a rewrite, a new file format, a hosted runtime, or generated application code.
+**Averri is a contract and semantic-graph layer for agent-written TypeScript backends.** You declare, in ordinary TypeScript, what each action requires, what it ensures, and who may call it. A compiler turns those declarations into a verified graph of your backend (entities, actions, policies, events, workflows, routes, effects), checks them against the handler code that actually runs, generates tests from them (auth matrices, precondition boundaries, postcondition properties, known third-party pitfalls), and exposes the whole thing to coding agents through six small MCP tools and a `--json` CLI. It attaches to an existing Prisma + Hono/Express + Zod repo without a rewrite, a new file format, a hosted runtime, or generated application code.
 
-The problem it targets is specific: coding agents now write a large share of the code in many backends, and the code they write compiles, passes the tests they wrote in the same session, and is still subtly wrong in the same places over and over (a route with no authorization, a webhook whose body was parsed before the signature was verified, a payment handler with no idempotency guard, a Zod schema that drifted from the Prisma field it validates). Averr's bet is that a human-approved contract, declared once, checked by a compiler, and flagged when weakened, catches that class in a way a same-session agent test cannot. Whether the bet holds is an open question, and this repo ships the benchmark meant to answer it (see [docs/BENCHMARK.md](docs/BENCHMARK.md)).
+The problem it targets is specific: coding agents now write a large share of the code in many backends, and the code they write compiles, passes the tests they wrote in the same session, and is still subtly wrong in the same places over and over (a route with no authorization, a webhook whose body was parsed before the signature was verified, a payment handler with no idempotency guard, a Zod schema that drifted from the Prisma field it validates). Averri's bet is that a human-approved contract, declared once, checked by a compiler, and flagged when weakened, catches that class in a way a same-session agent test cannot. Whether the bet holds is an open question, and this repo ships the benchmark meant to answer it (see [docs/BENCHMARK.md](docs/BENCHMARK.md)).
 
 ## Who it is for
 
@@ -17,7 +17,7 @@ The problem it targets is specific: coding agents now write a large share of the
 
 ```ts
 // src/members/inviteMember.ts  (existing Hono + Prisma app; no schema changes)
-import { entity, policy, action, event, e, db } from "@averr/core";
+import { entity, policy, action, event, e, db } from "@averri/core";
 import { z } from "zod";
 
 export const Invitation = entity("Invitation", { owner: "team-platform" });   // name = Prisma model name
@@ -44,13 +44,13 @@ export const InviteMember = action("Team.inviteMember", {
 });
 ```
 
-From this, with no application code generated, Averr derives: Policy, Contract, Event, and Action nodes with a verified `writes -> Invitation` edge and declared `reads -> Membership` edges from the policy and the predicate; a diagnostic if the route has no matching registration or no policy; a generated Vitest suite (auth matrix for anonymous / member / other-team admin / admin, a `notAlreadyMember` violation rejected (412 with the contract id once the action runs in declared mode), a fast-check property for `pendingForEmail`, exactly one `MemberInvited` emitted); an OpenAPI entry; and a Markdown spec card a non-engineer can review. The bare async function (tier 3, an opaque guard) is listed as opaque and gets no generated test; the compiler reports how many of your contracts are opaque.
+From this, with no application code generated, Averri derives: Policy, Contract, Event, and Action nodes with a verified `writes -> Invitation` edge and declared `reads -> Membership` edges from the policy and the predicate; a diagnostic if the route has no matching registration or no policy; a generated Vitest suite (auth matrix for anonymous / member / other-team admin / admin, a `notAlreadyMember` violation rejected (412 with the contract id once the action runs in declared mode), a fast-check property for `pendingForEmail`, exactly one `MemberInvited` emitted); an OpenAPI entry; and a Markdown spec card a non-engineer can review. The bare async function (tier 3, an opaque guard) is listed as opaque and gets no generated test; the compiler reports how many of your contracts are opaque.
 
 Contracts come in three tiers, and the tier is visible in the type system: `e.*` expressions (serializable AST, fully derivable), `db.*` predicates (a closed set over Prisma models), and bare `async (ctx) => boolean` functions (tier 3 "guards": arbitrary logic, traced and enforced but excluded from generation). See the design document for why this split exists and what each tier buys.
 
 ## The six agent tools
 
-Transport is MCP over stdio (and HTTP), plus `averr <tool> --json` with identical output for agents composing in Bash. Every response carries `commit` and `stale: false`; the server rebuilds by content hash on demand and never silently returns a stale answer.
+Transport is MCP over stdio (and HTTP), plus `averri <tool> --json` with identical output for agents composing in Bash. Every response carries `commit` and `stale: false`; the server rebuilds by content hash on demand and never silently returns a stale answer.
 
 | Tool | Question it answers | Input | Output (bounded) |
 |---|---|---|---|
@@ -67,43 +67,61 @@ Deliberately absent: an IR patch language (agents edit text), session-aware delt
 
 ## Install and use
 
-Nothing is published yet. The commands below are the intended surface and will work once V0 lands; until then, see [CONTRIBUTING.md](CONTRIBUTING.md) to run from source.
+Nothing is published yet. The commands below are the intended surface once the packages are on npm; until then, [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) has the exact commands to run everything from a checkout, including the MCP configuration for Claude Code and Cursor.
 
 ```sh
-npm install --save-dev @averr/cli @averr/core
-npx averr init      # detects Prisma + Hono/Express + Zod, writes averr.config.ts,
+npm install --save-dev @averri/cli @averri/core
+npx averri init      # detects Prisma + Hono/Express + Zod, writes averri.config.ts,
                      # and adds a 40-line block to CLAUDE.md / AGENTS.md / .cursor/rules
-npx averr check     # typecheck + lint + affected generated and hand-written tests, structured output
-npx averr docs      # Markdown spec card per action (SPEC.md per module)
+npx averri check     # typecheck + lint + affected generated and hand-written tests, structured output
+npx averri docs      # Markdown spec card per action (SPEC.md per module)
 ```
 
 MCP configuration for Claude Code:
 
 ```sh
-claude mcp add averr -- npx -y @averr/cli mcp
+claude mcp add averri -- npx -y @averri/cli mcp
 ```
 
 MCP configuration for Cursor (`.cursor/mcp.json`):
 
 ```json
-{ "mcpServers": { "averr": { "command": "npx", "args": ["-y", "@averr/cli", "mcp"] } } }
+{ "mcpServers": { "averri": { "command": "npx", "args": ["-y", "@averri/cli", "mcp"] } } }
 ```
 
 Requirements for V0: Node 20+, TypeScript 5.x, Prisma, Hono or Express, Zod. One ORM, two routers, one validator. Nothing else in V0.
 
-## What Averr is not
+## What Averri is not
 
-Not a new file format or language. Not a runtime you host. Not a replacement for Prisma, Hono, Express, Zod, Temporal, Inngest, or your auth library; it compiles to them and binds to them. Not a code-search tool. Not a token-spend dashboard. In V0 there is nothing to eject: remove the `@averr/*` imports and the generated test directory and your app is what it was.
+Not a new file format or language. Not a runtime you host. Not a replacement for Prisma, Hono, Express, Zod, Temporal, Inngest, or your auth library; it compiles to them and binds to them. Not a code-search tool. Not a token-spend dashboard. In V0 there is nothing to eject: remove the `@averri/*` imports and the generated test directory and your app is what it was.
 
 ## Status
 
-Pre-alpha, V0 in progress. The design is settled enough to build against ([docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)); the code is not yet usable. The roadmap, with explicit non-goals, is in [docs/ROADMAP.md](docs/ROADMAP.md).
+Pre-alpha. V0 runs end to end from a checkout; nothing is published to npm yet. To try it, follow [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md). The roadmap, with explicit non-goals, is in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+What works today (verified on 2026-10-25 against `examples/seed-app`, a 38-route Hono + Prisma + Zod backend):
+
+- **Compiler and graph.** Entities and fields from `schema.prisma`, Hono and Express routes, Zod schemas, hand-written Vitest tests, and the seven declaration constructs, lowered statically (declarations are never imported). Route binding, policy coverage, field references, effect verification against the handler (including events published through your own bus in observe mode), weakening detection, a content-hash cache. On the seed app it found a GET handler that wrote to the database and a postcondition naming a field the response does not have.
+- **Generated tests.** Auth matrix, precondition violations, postcondition properties, event counts, entity invariants, workflow consumers, and webhook pitfalls (signature, raw body, idempotency) for a real app in observe mode. On the seed app: 264 generated tests pass alongside 116 hand-written ones; 17 are `it.todo` with the reason (row-count fixtures, clauses mixing predicates with other conditions).
+- **Runtime.** Declared mode (`handle`, `toHono`, `toExpress`) and the observe-mode Vitest wrapper, with JSONL traces.
+- **Agent surface.** All eight MCP tools over stdio and HTTP, and the same results from `averri <tool> --json`; `init`, `build`, `check`, `docs`, `report`, `fmt`, `testgen`, `suggest`.
+- **Tests.** `npm run typecheck` is clean and `npm test` passes: 94 files, 1033 tests, 17 marked todo. The full suite takes about six minutes, mostly because many compiler tests build a whole project.
+
+What does not work yet:
+
+- No npm release. Using the generated tests in a repo outside this monorepo means linking `@averri/core`, `@averri/contracts` and `@averri/ir` from a checkout (they ship TypeScript sources), and the snippet `init` prints (`npx averri mcp`) needs the CLI installed.
+- No incremental build: a cold build of the seed app takes about 8 to 18 seconds (the spec targets under 3 seconds incremental); cached queries are instant. `check --scope all` on the seed app takes 1 to 3 minutes.
+- Fixture synthesis cannot produce row counts (`db.countWhere`), compound primary keys, or violations of clauses that mix `db.*` predicates with other conditions; those tests are emitted as `it.todo`.
+- Express support is covered by the extractor and runtime tests, not by an example app. Only Prisma, Hono/Express and Zod are supported.
+- The benchmark harness in `bench/` is not built; no benchmark result exists.
+- Git-dependent paths (`check --base`, `impact --base`, `inspect` history) have unit coverage only through `report`.
 
 This project started as an attempt to design a new, agent-native programming language and ended up here after a research round and a build-or-pass review in which three independent reviewers said pass. The founder built it anyway, as a community project. That story, including what was dropped and why, is in [docs/JOURNEY.md](docs/JOURNEY.md). Read it before assuming the design is more certain than it is.
 
 ## Documents
 
-- [docs/JOURNEY.md](docs/JOURNEY.md): from AgentLang to Averr; what was kept, what was dropped, and why.
+- [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md): run the seed app, the CLI and the MCP server from a checkout, and point Averri at your own repo.
+- [docs/JOURNEY.md](docs/JOURNEY.md): from AgentLang to Averri; what was kept, what was dropped, and why.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the IR, the three-tier contract language, the compiler and runtime stack.
 - [docs/BENCHMARK.md](docs/BENCHMARK.md): AgentCodeBench v0 pre-registration draft, with kill criteria and an invitation to reproduce.
 - [docs/ROADMAP.md](docs/ROADMAP.md): V0 milestones and non-goals.

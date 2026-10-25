@@ -1,0 +1,46 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  members     Membership[]
+  invitations Invitation[]
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  memberships Membership[]
+}
+
+model Membership {
+  id     String @id @default(cuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  role   String
+
+  @@unique([teamId, userId])
+}
+
+model Invitation {
+  id         String    @id @default(cuid())
+  teamId     String
+  team       Team      @relation(fields: [teamId], references: [id])
+  email      String
+  role       String
+  status     String    @default("pending")
+  seats      Int       @default(1)
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([teamId, email])
+}

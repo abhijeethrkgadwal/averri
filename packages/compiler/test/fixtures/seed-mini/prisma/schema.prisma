@@ -1,0 +1,228 @@
+// Averri seed app — Prisma schema.
+//
+// SQLite is used for local development and tests. To switch to Postgres change the datasource
+// `provider` to "postgresql" (and DATABASE_URL); the models below deliberately avoid SQLite-only or
+// Postgres-only features. Closed string sets (roles, statuses, plans) are plain `String` columns
+// validated by Zod in the application because SQLite has no native enums; on Postgres they can be
+// promoted to `enum` types without changing application code.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A person who can sign in. Emails are stored lower-cased.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships         Membership[]
+  authTokens          AuthToken[]
+  sentInvitations     Invitation[] @relation("InvitationInviter")
+  acceptedInvitations Invitation[] @relation("InvitationAcceptor")
+  createdProjects     Project[]
+  createdTasks        Task[]       @relation("TaskCreator")
+  assignedTasks       Task[]       @relation("TaskAssignee")
+  createdApiKeys      ApiKey[]
+}
+
+/// A bearer token that authenticates a user. Only the SHA-256 hash of the token is stored.
+model AuthToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
+}
+
+/// The tenant. Every other business row is scoped to one organization.
+model Organization {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships  Membership[]
+  invitations  Invitation[]
+  projects     Project[]
+  tasks        Task[]
+  apiKeys      ApiKey[]
+  subscription Subscription?
+  auditLogs    AuditLog[]
+}
+
+/// Who belongs to an organization and with which role: "owner" | "admin" | "member".
+model Membership {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+/// An invitation to join an organization. status: "pending" | "accepted" | "revoked" | "expired".
+/// One invitation per (organization, email); re-inviting a pending email resends it.
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String
+  status         String       @default("pending")
+  token          String       @unique
+  invitedById    String
+  invitedBy      User         @relation("InvitationInviter", fields: [invitedById], references: [id])
+  acceptedById   String?
+  acceptedBy     User?        @relation("InvitationAcceptor", fields: [acceptedById], references: [id])
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  resentAt       DateTime?
+  resendCount    Int          @default(0)
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, email])
+  @@index([email])
+}
+
+/// A project inside an organization. status: "active" | "archived". `key` is a short upper-case code unique per organization.
+model Project {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  key            String
+  description    String?
+  status         String       @default("active")
+  createdById    String
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  archivedAt     DateTime?
+  taskCounter    Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  tasks Task[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId, status])
+}
+
+/// A task inside a project. status: "todo" | "in_progress" | "done"; priority: "low" | "medium" | "high".
+/// `organizationId` is denormalised so tenant scoping never needs a join.
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number         Int
+  title          String
+  description    String?
+  status         String       @default("todo")
+  priority       String       @default("medium")
+  assigneeId     String?
+  assignee       User?        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById    String
+  createdBy      User         @relation("TaskCreator", fields: [createdById], references: [id])
+  dueAt          DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([projectId, number])
+  @@index([organizationId, status])
+  @@index([assigneeId])
+}
+
+/// An organization-scoped API key. The secret is shown once; only its hash and a display prefix are stored.
+/// role: "admin" | "member" (what the key may do on behalf of the organization).
+model ApiKey {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  role           String       @default("member")
+  prefix         String
+  secretHash     String       @unique
+  version        Int          @default(1)
+  createdById    String
+  createdBy      User         @relation(fields: [createdById], references: [id])
+  lastUsedAt     DateTime?
+  rotatedAt      DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+/// Billing state of an organization, mirrored from Stripe webhooks.
+/// plan: "free" | "pro" | "enterprise"; status: "active" | "trialing" | "past_due" | "canceled" | "incomplete".
+model Subscription {
+  id                   String       @id @default(cuid())
+  organizationId       String       @unique
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?      @unique
+  stripeSubscriptionId String?      @unique
+  plan                 String       @default("free")
+  status               String       @default("active")
+  seats                Int          @default(1)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+}
+
+/// Every webhook delivery we accepted, keyed by the provider's event id for idempotency.
+/// status: "processed" | "ignored" | "failed".
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String
+  eventId     String
+  type        String
+  payload     String
+  status      String
+  error       String?
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+}
+
+/// Append-only record of who did what inside an organization.
+/// actorType: "user" | "apiKey" | "webhook" | "system".
+model AuditLog {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorType      String
+  actorId        String?
+  action         String
+  targetType     String
+  targetId       String?
+  metadata       String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+}

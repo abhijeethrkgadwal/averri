@@ -1,6 +1,6 @@
 # SPEC-MCP — The agent interface
 
-Status: normative for V0. Implemented by `@averr/mcp` (MCP server over stdio and HTTP) and `@averr/cli` (`averr <tool> --json` with byte-identical JSON output). Both call `@averr/compiler`; neither contains graph logic. Decisions are logged in `SPEC-DECISIONS.md` (`D-n`).
+Status: normative for V0. Implemented by `@averri/mcp` (MCP server over stdio and HTTP) and `@averri/cli` (`averri <tool> --json` with byte-identical JSON output). Both call `@averri/compiler`; neither contains graph logic. Decisions are logged in `SPEC-DECISIONS.md` (`D-n`).
 
 ## 1. Principles
 
@@ -8,13 +8,13 @@ Status: normative for V0. Implemented by `@averr/mcp` (MCP server over stdio and
 - **Never stale, never silent.** Every call rebuilds on demand by content hash (§4). Every response carries the envelope in §3 with `stale: false`. A server that cannot rebuild returns an error, not an old answer.
 - **Bounded output.** Each tool has a token budget. The server truncates at item boundaries, sets `truncated: true`, and returns `more` handles. Budgets are measured as `ceil(chars / 4)` of the serialised JSON.
 - **Evidence, not confidence.** Extracted facts carry evidence strings; below confidence 0.9 the server refuses to assert and points at `read_source`.
-- **Docs are resources.** Construct semantics cards are MCP resources at `averr://docs/<construct>`; they cost nothing until fetched.
+- **Docs are resources.** Construct semantics cards are MCP resources at `averri://docs/<construct>`; they cost nothing until fetched.
 
 ## 2. Transport
 
-- MCP over stdio (`averr mcp`) and streamable HTTP (`averr mcp --http <port>`), using `@modelcontextprotocol/sdk`.
-- CLI mirror: `averr overview --json`, `averr find --json --query ...`, etc. Output MUST be the same JSON the MCP tool returns. Without `--json` the CLI prints a human rendering.
-- `averr init` writes the agent block (≤ 40 lines, §8) into `CLAUDE.md`, `AGENTS.md` and `.cursor/rules`, writes `averr.config.ts` and `src/averr.d.ts`, adds the devDependencies generated tests need (`vitest`, `fast-check`, `@averr/contracts`), and registers the MCP server in the detected agent's config.
+- MCP over stdio (`averri mcp`) and streamable HTTP (`averri mcp --http <port>`), using `@modelcontextprotocol/sdk`.
+- CLI mirror: `averri overview --json`, `averri find --json --query ...`, etc. Output MUST be the same JSON the MCP tool returns. Without `--json` the CLI prints a human rendering.
+- `averri init` writes the agent block (≤ 40 lines, §8) into `CLAUDE.md`, `AGENTS.md` and `.cursor/rules`, writes `averri.config.ts` and `src/averri.d.ts`, adds the devDependencies generated tests need (`vitest`, `fast-check`, `@averri/contracts`), and registers the MCP server in the detected agent's config.
 
 ## 3. Response envelope
 
@@ -38,9 +38,9 @@ type ToolError = { ok: false; error: "build-failed" | "not-found" | "ambiguous" 
 ## 4. Staleness rule
 
 1. Compute `contentHash` over the input file set (SPEC-IR §6; generated tests excluded).
-2. If `.averr/graph.json` exists, validates against `GraphSchema`, and `meta.contentHash` matches → serve it.
+2. If `.averri/graph.json` exists, validates against `GraphSchema`, and `meta.contentHash` matches → serve it.
 3. Otherwise rebuild. If the build throws (not: produces diagnostics) → return `{ ok: false, error: "build-failed" }` with whatever diagnostics exist. Never serve the previous graph.
-4. Concurrency: builds are serialised through a lock file `.averr/build.lock`; concurrent callers (subagents) wait, then re-check the hash. There is no file watcher.
+4. Concurrency: builds are serialised through a lock file `.averri/build.lock`; concurrent callers (subagents) wait, then re-check the hash. There is no file watcher.
 5. Target: incremental rebuild < 3 s on 60 k LOC. `check` additionally runs tsc and Vitest and targets < 10 s on 20 k LOC with `scope: "affected"`.
 
 ## 5. Confidence rule
@@ -186,9 +186,9 @@ Output `data`:
 Rules:
 
 - `scope: "affected"` with a dirty tree = tests from `impact` of HEAD..working tree plus any test touching changed files. With a clean tree and no `diffBase`, "affected" means last-green..HEAD; with no last green it falls back to `all`. The affected set is never silently empty: if it would be, the response says so in `coverage.message` and runs all generated tests.
-- `rerun` is a pasteable command, e.g. `npx vitest run tests/averr/Team.gen.test.ts -t "[Contract:Team.inviteMember.requires.notAlreadyMember] violation is rejected"`.
-- `check` regenerates `tests/averr/*.gen.test.ts` when their `sourceHash` changed; a diff touching those files after `check` is expected.
-- `check` writes `.averr/last-check.json` (`{ meta: { contentHash }, diagnostics, tests }`) every run, and on green writes `.averr/last-green.json` (`{ meta, tests, at, snapshot: "snapshots/<contentHash>.json" }`) and pins that snapshot. `since_last_green` in diagnostics is computed against the pinned snapshot. tsc errors are collapsed per SPEC-DIAGNOSTICS §5.
+- `rerun` is a pasteable command, e.g. `npx vitest run tests/averri/Team.gen.test.ts -t "[Contract:Team.inviteMember.requires.notAlreadyMember] violation is rejected"`.
+- `check` regenerates `tests/averri/*.gen.test.ts` when their `sourceHash` changed; a diff touching those files after `check` is expected.
+- `check` writes `.averri/last-check.json` (`{ meta: { contentHash }, diagnostics, tests }`) every run, and on green writes `.averri/last-green.json` (`{ meta, tests, at, snapshot: "snapshots/<contentHash>.json" }`) and pins that snapshot. `since_last_green` in diagnostics is computed against the pinned snapshot. tsc errors are collapsed per SPEC-DIAGNOSTICS §5.
 
 ### 6.6 `explain` — why a test, diagnostic or trace failed (≤ 1 500 tokens)
 
@@ -204,7 +204,7 @@ z.object({
 }).refine(exactlyOneOf("testId", "diagId", "diag", "traceId"))
 ```
 
-`diagId` resolves against `.averr/last-check.json`; if its `contentHash` differs from the current graph the result is `{ ok: false, error: "not-found", message: "diagnostics were from build <hash>; run check again" }`. `diag: { code, node }` resolves against the current graph's diagnostics and survives rebuilds.
+`diagId` resolves against `.averri/last-check.json`; if its `contentHash` differs from the current graph the result is `{ ok: false, error: "not-found", message: "diagnostics were from build <hash>; run check again" }`. `diag: { code, node }` resolves against the current graph's diagnostics and survives rebuilds.
 
 Output `data`:
 
@@ -229,7 +229,7 @@ Rules: no hypotheses. `explain` returns actual-vs-expected, the chain and the di
 
 Input: `z.object({ file: z.string(), range: z.tuple([z.number().int().min(1), z.number().int().min(1)]).optional() })` (1-based inclusive line range).
 
-Output `data`: `{ file, range, text, lines: number }`. Refuses files outside the project root and files matching `.gitignore` except `.averr/traces`. Never truncates inside a line; if the range exceeds the budget it returns the first N full lines and `more: ["file:<nextLine>"]`.
+Output `data`: `{ file, range, text, lines: number }`. Refuses files outside the project root and files matching `.gitignore` except `.averri/traces`. Never truncates inside a line; if the range exceeds the budget it returns the first N full lines and `more: ["file:<nextLine>"]`.
 
 ### 6.8 `suggest` — draft declarations (≤ 2 000 tokens)
 
@@ -241,28 +241,28 @@ Output `data`: `{ proposals: Array<{ target: NodeId; patch: string; evidence: st
 
 | URI | Content | Size |
 |---|---|---|
-| `averr://docs/core` | the core card: the observe-mode example from SPEC-DECLARATIONS §6 (the adoption path), the ref-root × phase table (6 lines), the lhs-path/rhs-literal rule, the `effects` and `PayloadType` literal lists, the construct list, and a pointer to `averr://docs/action` for the declared-mode pipeline | ≤ 1 500 tokens |
-| `averr://docs/<construct>` for `entity, policy, action, query, event, workflow, integration, contracts, identity, tests, graph, check, config` | semantics card: ordering, transaction boundary, phase rules, pitfalls; `config` documents `averr.config.ts` (SPEC-DECLARATIONS §9) | ≤ 300 tokens each |
-| `averr://card/<NodeId>` | the Markdown spec card for one node (URI-encoded id) | ≤ 15 lines |
+| `averri://docs/core` | the core card: the observe-mode example from SPEC-DECLARATIONS §6 (the adoption path), the ref-root × phase table (6 lines), the lhs-path/rhs-literal rule, the `effects` and `PayloadType` literal lists, the construct list, and a pointer to `averri://docs/action` for the declared-mode pipeline | ≤ 1 500 tokens |
+| `averri://docs/<construct>` for `entity, policy, action, query, event, workflow, integration, contracts, identity, tests, graph, check, config` | semantics card: ordering, transaction boundary, phase rules, pitfalls; `config` documents `averri.config.ts` (SPEC-DECLARATIONS §9) | ≤ 300 tokens each |
+| `averri://card/<NodeId>` | the Markdown spec card for one node (URI-encoded id) | ≤ 15 lines |
 
-## 8. Agent block written by `averr init`
+## 8. Agent block written by `averri init`
 
 Content (normative wording, ≤ 40 lines):
 
 - call `overview` once per session;
 - call `find` or `impact` before editing an entity, route, policy or contract; pass ids as `Action:Team.inviteMember` or bare `Team.inviteMember`, never file paths;
-- run `check` instead of raw `tsc`/`vitest`; `check` regenerates `tests/averr/*.gen.test.ts`, so a diff touching them is expected;
-- trust generated contract tests and do not edit `tests/averr/*.gen.test.ts`;
+- run `check` instead of raw `tsc`/`vitest`; `check` regenerates `tests/averri/*.gen.test.ts`, so a diff touching them is expected;
+- trust generated contract tests and do not edit `tests/averri/*.gen.test.ts`;
 - if a contract must be weakened or removed, say so explicitly in the PR description and pass `acknowledgeWeakening: true` to `check`;
 - contracts: the left side of a comparison is a path string (`"result.email"`), the right side is `e.<root>()` or a literal; tier-3 clauses are bare `async (ctx) => boolean` functions and get no generated tests, so prefer `e.*`/`db.*`;
 - when a tool says low-confidence or returns `verify`, use `read_source`;
 - use `find` for entities, routes, policies, contracts and tests; use grep for call sites of ordinary functions, middleware chains, env/config usage and error-message strings;
 - prefer the first `fix` on a diagnostic; state in the PR when you chose another.
 
-## 9. Implementation notes for `@averr/mcp` and `@averr/cli`
+## 9. Implementation notes for `@averri/mcp` and `@averri/cli`
 
 - One module per tool under `packages/mcp/src/tools/`, each exporting `{ name, inputSchema, handler }`; `packages/cli` imports the same modules and prints `JSON.stringify(result)` for `--json`. No logic duplication between MCP and CLI.
 - Budget enforcement is a shared `bound(data, budget, dropOrder)` helper that removes list items from the end in the documented drop order and sets `truncated`/`more`.
-- Build and staleness live in `@averr/compiler` (`loadOrBuild(root): Promise<Graph>`); the MCP server never reads `.averr/graph.json` directly.
+- Build and staleness live in `@averri/compiler` (`loadOrBuild(root): Promise<Graph>`); the MCP server never reads `.averri/graph.json` directly.
 - Token-usage telemetry is out of scope: an MCP server cannot see token counts and MUST NOT pretend to.
 - Tool descriptions sent to the model are the first sentence of each §6 heading plus the budget; keep them under 30 words each so the tool schema cost charged to arm B of the benchmark stays small. They cannot carry the id grammar, which is why the agent block does.

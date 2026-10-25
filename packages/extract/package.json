@@ -1,7 +1,7 @@
 {
-  "name": "@averr/extract",
+  "name": "@averri/extract",
   "version": "0.0.1",
-  "description": "Averr extract package",
+  "description": "Averri extractors: Prisma schema facts, Hono/Express exposures, Zod schema references, hand-written Vitest tests, Module nodes and the repository content hash",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -12,5 +12,11 @@
   "files": ["src"],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/ir": "0.0.1",
+    "@mrleebo/prisma-ast": "^0.15.0",
+    "fast-glob": "^3.3.3",
+    "ts-morph": "^28.0.0"
   }
 }

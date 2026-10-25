@@ -1,7 +1,7 @@
 {
-  "name": "@averr/mcp",
+  "name": "@averri/mcp",
   "version": "0.0.1",
-  "description": "Averr mcp package",
+  "description": "Averri MCP server (stdio and streamable HTTP) and the plain tool functions the CLI reuses",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./src/index.ts",
@@ -9,8 +9,16 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "test": "vitest run --dir test"
+  },
+  "dependencies": {
+    "@averri/compiler": "0.0.1",
+    "@averri/ir": "0.0.1",
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "zod": "^4.6.7"
   }
 }
