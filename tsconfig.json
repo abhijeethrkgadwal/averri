@@ -2,6 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "customConditions": ["development"],
     "types": ["node"]
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "examples/*/src/**/*.ts", "examples/*/test/**/*.ts", "examples/*/tests/**/*.ts", "bench/src/**/*.ts"],

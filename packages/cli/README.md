@@ -30,10 +30,8 @@ import { run } from "@averri/cli";
 const code = await run(["find", "invite", "--json"], { cwd, stdout, stderr, stdin, color: false });
 ```
 
-## Running before the release build
+## Running from the repository
 
-`bin` points at `src/bin.ts` (shebang `tsx`). During development use `npx tsx packages/cli/src/bin.ts`.
-The published package compiles `src` to `dist` and re-points `bin` at `dist/bin.js` (release pipeline,
-not part of this package yet).
+`bin` is `./dist/bin.js` (shebang `node`, built by `npm run build`). In the monorepo use `npm run averri -- <command>`, which runs `tsx --conditions=development packages/cli/src/bin.ts` against the TypeScript sources (the `development` export condition). See docs/RELEASING.md.
 
 `fmt` rewrites files by default (`--check` only reports); see D-39 for the deviation from D-22.

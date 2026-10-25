@@ -24,7 +24,7 @@ import { serialize } from "./envelope.js";
 import { callTool, TOOLS } from "./tools/index.js";
 
 export const SERVER_NAME = "averri";
-export const SERVER_VERSION = "0.0.1";
+export const SERVER_VERSION = "0.1.0-alpha.0";
 
 export interface ToolDescriptor {
   name: string;

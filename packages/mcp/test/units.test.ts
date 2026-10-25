@@ -172,7 +172,7 @@ describe("agent block", () => {
       expect(block, phrase).toContain(phrase);
     }
     expect(AGENT_BLOCK_FILES).toEqual(["CLAUDE.md", "AGENTS.md", ".cursor/rules"]);
-    expect(mcpServerRegistration()).toEqual({ command: "npx", args: ["averri", "mcp"] });
+    expect(mcpServerRegistration()).toEqual({ command: "npx", args: ["-y", "@averri/cli", "mcp"] });
   });
 
   it("upserts idempotently and preserves surrounding text", () => {

@@ -40,7 +40,7 @@ import { summarize } from "./summaries.js";
 import { compareStrings, toPosix } from "./util.js";
 import { finalizeProvenance, passZodMatch, runVerifiers } from "./verify/index.js";
 
-export const AVERRI_VERSION = "0.0.1";
+export const AVERRI_VERSION = "0.1.0-alpha.0";
 
 export interface BuildOptions {
   /** Repo-relative config module; default: the first `averri.config.*` found. `null` disables config. */

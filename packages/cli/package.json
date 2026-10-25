@@ -1,29 +1,66 @@
 {
   "name": "@averri/cli",
-  "version": "0.0.1",
+  "version": "0.1.0-alpha.0",
   "description": "Averri command line: init, build, check, docs, report, fmt, testgen, suggest, mcp and the --json tool mirrors",
   "license": "Apache-2.0",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "bin": {
-    "averri": "./src/bin.ts"
+  "keywords": [
+    "averri",
+    "typescript",
+    "contracts",
+    "agents",
+    "mcp",
+    "prisma",
+    "hono",
+    "ai",
+    "cli"
+  ],
+  "homepage": "https://github.com/abhijeethrkgadwal/averri/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/abhijeethrkgadwal/averri/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhijeethrkgadwal/averri.git",
+    "directory": "packages/cli"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "averri": "./dist/bin.js"
   },
   "files": [
-    "src"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "test": "vitest run --dir test"
+    "build": "tsc -b",
+    "test": "vitest run --dir test",
+    "prepack": "node ../../scripts/pack-hooks.mjs prepack",
+    "postpack": "node ../../scripts/pack-hooks.mjs postpack"
   },
   "dependencies": {
-    "@averri/compiler": "0.0.1",
-    "@averri/ir": "0.0.1",
-    "@averri/mcp": "0.0.1",
-    "@averri/testgen": "0.0.1",
-    "commander": "^14.0.0",
+    "@averri/compiler": "0.1.0-alpha.0",
+    "@averri/ir": "0.1.0-alpha.0",
+    "@averri/mcp": "0.1.0-alpha.0",
+    "@averri/testgen": "0.1.0-alpha.0",
+    "commander": "^14.0.3",
     "picocolors": "^1.1.1",
     "ts-morph": "^28.0.0"
   }

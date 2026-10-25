@@ -109,7 +109,7 @@ What works today (verified on 2026-10-25 against `examples/seed-app`, a 38-route
 
 What does not work yet:
 
-- No npm release. Using the generated tests in a repo outside this monorepo means linking `@averri/core`, `@averri/contracts` and `@averri/ir` from a checkout (they ship TypeScript sources), and the snippet `init` prints (`npx averri mcp`) needs the CLI installed.
+- Not published to npm yet. The packages build to `dist` and a pack-and-install smoke test (`npm run smoke:pack`, [docs/RELEASING.md](docs/RELEASING.md)) shows the packed tarballs working in a fresh project outside this repo, but `0.1.0-alpha.0` has not been released.
 - No incremental build: a cold build of the seed app takes about 8 to 18 seconds (the spec targets under 3 seconds incremental); cached queries are instant. `check --scope all` on the seed app takes 1 to 3 minutes.
 - Fixture synthesis cannot produce row counts (`db.countWhere`), compound primary keys, or violations of clauses that mix `db.*` predicates with other conditions; those tests are emitted as `it.todo`.
 - Express support is covered by the extractor and runtime tests, not by an example app. Only Prisma, Hono/Express and Zod are supported.

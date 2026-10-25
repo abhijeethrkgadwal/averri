@@ -1,5 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] },
-  "include": ["src/**/*.ts"]
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../compiler"
+    },
+    {
+      "path": "../ir"
+    },
+    {
+      "path": "../mcp"
+    },
+    {
+      "path": "../testgen"
+    }
+  ]
 }

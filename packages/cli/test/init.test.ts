@@ -83,7 +83,7 @@ describe("averri init", () => {
     const root = project();
     const r = await cli(root, ["init"]);
     expect(r.stdout).toContain("created   averri.config.ts");
-    expect(r.stdout).toContain("claude mcp add averri -- npx averri mcp");
+    expect(r.stdout).toContain("claude mcp add averri -- npx -y @averri/cli mcp");
     expect(r.stdout).toContain('"mcpServers"');
   });
 });

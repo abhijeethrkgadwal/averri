@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runTool } from "../src/index.js";
-import { cli, copyFixture, normalize } from "./helpers.js";
+import { TEST_DIR, cli, copyFixture, normalize } from "./helpers.js";
 
 const fx = copyFixture("team-app");
 const root = fx.root;
@@ -35,7 +35,7 @@ describe("usage and exit codes", () => {
   it("--version exits 0", async () => {
     const r = await cli(root, ["--version"]);
     expect(r.code).toBe(0);
-    expect(r.stdout.trim()).toBe("0.0.1");
+    expect(r.stdout.trim()).toBe(JSON.parse(fs.readFileSync(path.join(TEST_DIR, "../package.json"), "utf8")).version);
   });
 });
 

@@ -8,3 +8,5 @@ examples/seed-app/prisma/*.db
 examples/seed-app/prisma/*.db-journal
 bench/results/
 .DS_Store
+packages/*/LICENSE
+packages/*/.package.json.prepack-bak

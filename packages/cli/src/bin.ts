@@ -1,8 +1,7 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 /**
- * `averri` executable. Development entry: `tsx packages/cli/src/bin.ts <command>`. The published
- * package compiles `src` to `dist` and points `bin` at `dist/bin.js` (build step to be added with the
- * release pipeline; ARCHITECTURE §7).
+ * `averri` executable. Published as `dist/bin.js` (`bin` in package.json). Development entry:
+ * `npm run averri -- <command>` (`tsx --conditions=development packages/cli/src/bin.ts`).
  */
 
 import { run } from "./cli.js";

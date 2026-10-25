@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "customConditions": ["development"],
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "averri.config.ts", "vitest.config.ts"]

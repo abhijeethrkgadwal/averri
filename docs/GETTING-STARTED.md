@@ -39,7 +39,7 @@ cd ../..
 On Windows, `prisma generate` fails with `EPERM ... rename query_engine-windows.dll.node` while any
 process (a running test suite, `npm start`) holds the engine; stop it and re-run.
 
-Run the CLI against it from the repository root (`npm run averri --` is `tsx packages/cli/src/bin.ts`):
+Run the CLI against it from the repository root (`npm run averri --` is `tsx --conditions=development packages/cli/src/bin.ts`; the `development` export condition makes workspace packages resolve to their TypeScript sources):
 
 ```sh
 npm run averri -- --root examples/seed-app build      # graph, diagnostics, generated tests
@@ -122,8 +122,8 @@ Verified here: that exact stdio command, started by the MCP SDK client, listed t
 (`overview, find, inspect, impact, check, explain, read_source, suggest`) and answered `find` for
 the temp project; `packages/mcp/test/seed-app.e2e.test.ts` starts the same server against the seed
 app and calls every tool, `check` included. **Not run here:** `claude mcp add` itself and Cursor's
-UI (both edit your user configuration). The snippet `init` prints says `npx averri mcp`; that form
-only works once `@averri/cli` is installed in the project.
+UI (both edit your user configuration). The snippet `init` prints is `npx -y @averri/cli mcp`, which works from the npm package once it is
+published (see docs/RELEASING.md for the pack-and-install check that proves it from tarballs).
 
 ## 5. What to expect
 

@@ -6,6 +6,9 @@ import { defineProject } from "vitest/config";
  * SQLite database before the entry module is imported.
  */
 export default defineProject({
+  // workspace packages resolve to their TypeScript sources (the "development" export condition)
+  resolve: { conditions: ["development"] },
+  ssr: { resolve: { conditions: ["development"] } },
   test: {
     name: "seed-app",
     include: ["test/**/*.test.ts", "tests/averri/**/*.gen.test.ts"],

@@ -35,7 +35,7 @@ beforeAll(async () => {
   client = new Client({ name: "seed-app-e2e", version: "0.0.0" });
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: ["--import", "tsx", CLI, "--root", SEED_APP, "mcp"],
+    args: ["--conditions=development", "--import", "tsx", CLI, "--root", SEED_APP, "mcp"],
     cwd: REPO,
     stderr: "pipe",
   });

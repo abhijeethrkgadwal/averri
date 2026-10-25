@@ -51,5 +51,5 @@ export function upsertAgentBlock(existing: string | null): string {
 
 /** The MCP server registration the CLI writes into the detected agent's config (`.mcp.json` form). */
 export function mcpServerRegistration(): { command: string; args: string[] } {
-  return { command: "npx", args: ["averri", "mcp"] };
+  return { command: "npx", args: ["-y", "@averri/cli", "mcp"] };
 }

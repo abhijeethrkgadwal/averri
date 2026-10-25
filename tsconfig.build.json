@@ -1,0 +1,29 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/ir"
+    },
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/extract"
+    },
+    {
+      "path": "packages/testgen"
+    },
+    {
+      "path": "packages/contracts"
+    },
+    {
+      "path": "packages/compiler"
+    },
+    {
+      "path": "packages/mcp"
+    },
+    {
+      "path": "packages/cli"
+    }
+  ]
+}

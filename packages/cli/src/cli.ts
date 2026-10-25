@@ -9,6 +9,7 @@ import * as path from "node:path";
 import { build } from "@averri/compiler";
 import type { Diagnostic } from "@averri/ir";
 import { Command, CommanderError, Option } from "commander";
+import { fileURLToPath } from "node:url";
 import { docs } from "./commands/docs.js";
 import { fmt } from "./commands/fmt.js";
 import { init } from "./commands/init.js";
@@ -30,6 +31,9 @@ import {
 import { EXIT_DIAGNOSTICS, EXIT_OK, EXIT_USAGE, UsageError, processIo, type Io } from "./io.js";
 import { runTool, exitCodeOf, serialize, NODE_KINDS, type ToolContext, type ToolName, type ToolResponse } from "./tools.js";
 
+/** This package's version (src/ and dist/ are both one level below package.json). */
+const PKG_VERSION = (JSON.parse(fs.readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8")) as { version: string }).version;
+
 export interface RunOptions {
   /** Overrides passed to `check` (tests inject fake tsc/vitest runners). */
   check?: ToolContext["check"];
@@ -49,7 +53,7 @@ export function createProgram(io: Io, state: { exit: number }, options: RunOptio
   program
     .name("averri")
     .description("Contracts and a semantic graph for agent-written TypeScript backends")
-    .version("0.0.1")
+    .version(PKG_VERSION)
     .option("--root <dir>", "project root (default: current directory)")
     .exitOverride()
     .configureOutput({ writeOut: (s) => io.stdout(s), writeErr: (s) => io.stderr(s) })

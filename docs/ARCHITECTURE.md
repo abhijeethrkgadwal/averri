@@ -112,12 +112,6 @@ Note: the FINAL design document specified SQLite (better-sqlite3 + FTS5) for the
 - Tests in `packages/<pkg>/test/**/*.test.ts` with Vitest (type-level contracts such as `packages/core/test/tier-types.test.ts` are checked by the root `typecheck`); generated application tests live in the target project under `tests/averri/` and are excluded from Averri's own Vitest config.
 - Every normative statement in `docs/SPEC-*.md` MUST correspond to a type or a test. Spec changes and type changes land in the same commit. Deviations are logged in `docs/SPEC-DECISIONS.md` with a number that the specs cite.
 
-## 7. Packaging (before anything is published)
+## 7. Packaging
 
-The workspace packages currently point `main`/`exports` at `src/index.ts`, which only works through the monorepo's workspace symlinks under `tsx`/Vitest; Node cannot load `.ts` from `node_modules` in a target project. Before publishing:
-
-- every package gets a `tsc -b` build (`packages/<pkg>/tsconfig.json` already sets `rootDir: src`, `outDir: dist`, `declaration: true`) and `exports` pointing at `./dist/index.js` with `types: ./dist/index.d.ts`; `files: ["dist"]`;
-- `@averri/contracts` is the only package the target project installs for tests/runtime besides `@averri/core`; `averri init` adds the devDependencies generated tests import: `vitest`, `fast-check`, `@averri/contracts` (and `@averri/core` as a dependency);
-- the CLI's `bin` is built the same way; `npx @averri/cli mcp` must work from a published tarball.
-
-Changing the package manifests is an implementation task, not a spec task; this section records the requirement so the first implementation PR for each package includes it.
+Each package builds with `tsc -b` (project references, `composite`; root `npm run build` uses `tsconfig.build.json`) to `packages/<pkg>/dist` (.js, .d.ts, source maps). `exports` has four conditions: `development` (`./src/index.ts`, used in-repo by the root tsconfig `customConditions`, Vitest `resolve.conditions` and `tsx --conditions=development`), `types`, `import` and `default` (`./dist/index.js`). A package `prepack` hook (`scripts/pack-hooks.mjs`) rebuilds, copies the root LICENSE in and strips `development` from the packed manifest, so consumers never see the source condition. The CLI `bin` is `dist/bin.js`; `npx -y @averri/cli mcp` is the registration `init` prints. Release procedure and the verified pack-and-install run: docs/RELEASING.md.

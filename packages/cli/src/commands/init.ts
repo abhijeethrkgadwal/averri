@@ -92,8 +92,8 @@ export const AVERRI_DTS = [
   "",
 ].join("\n");
 
-const DEV_DEPS: Record<string, string> = { vitest: "^2.0.0", "fast-check": "^4.0.0", "@averri/contracts": "^0.0.1" };
-const DEPS: Record<string, string> = { "@averri/core": "^0.0.1" };
+const DEV_DEPS: Record<string, string> = { vitest: "^2.0.0", "fast-check": "^4.0.0", "@averri/contracts": "^0.1.0-alpha.0" };
+const DEPS: Record<string, string> = { "@averri/core": "^0.1.0-alpha.0" };
 
 function ensurePackageJson(root: string, result: InitResult): void {
   const rel = "package.json";
@@ -154,7 +154,7 @@ export function mcpSnippets(): McpSnippets {
     claudeCode: `claude mcp add averri -- ${server.command} ${server.args.join(" ")}`,
     mcpJson: JSON.stringify({ mcpServers: { averri: server } }, null, 2),
     cursor: `.cursor/mcp.json:\n${JSON.stringify({ mcpServers: { averri: server } }, null, 2)}`,
-    http: "npx averri mcp --http 3333",
+    http: "npx -y @averri/cli mcp --http 3333",
   };
 }
 

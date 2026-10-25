@@ -23,3 +23,19 @@ jobs:
       - run: npm run typecheck
       - run: npm test
         timeout-minutes: 30
+  pack-smoke:
+    name: build and pack-and-install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Packs all eight packages, installs the tarballs into a fresh project outside the repo and runs
+      # init/build/overview/testgen/check plus an MCP initialize + tools/list from dist (no tsx).
+      - name: Pack-and-install smoke test
+        run: node scripts/smoke-pack.mjs --skip-build
+        timeout-minutes: 15
