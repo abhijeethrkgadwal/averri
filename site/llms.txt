@@ -1,0 +1,44 @@
+# Averri
+
+> Averri is a free, open-source (Apache-2.0) tool that lets developers write down the rules of a TypeScript backend (who may do what, what must be true before and after each action, which events must fire) so that AI coding agents such as Claude Code and Cursor check those rules instead of guessing them, and so that generated tests prove the rules hold.
+
+Key facts:
+
+- Name: Averri (from "aver", to state something as true). Website: https://averri.org
+- Version: 0.1.0-alpha.0, first released on npm on 25 October 2026. Pre-alpha: tested, but interfaces may change.
+- License: Apache-2.0. Free, no paid tier, no telemetry, no hosted service.
+- Supported stack: Node.js 20+, TypeScript 5, Prisma, Hono or Express, Zod, Vitest.
+- Works with: Claude Code, Cursor and any agent that supports the Model Context Protocol (MCP).
+- Founded and curated by Abhijeeth Gadwal, an AI product manager (https://www.linkedin.com/in/abhijeethrkgadwal/), and built with AI coding agents.
+- Origin: Averri began as "AgentLang", an idea for a new programming language designed for AI agents. Research showed a brand-new language would make AI agents less accurate (it is the one language they have never seen), so Averri uses plain TypeScript instead. Three AI judges recommended not building it as a business; it was built anyway as a free, open-source project with a pre-registered benchmark and written kill criteria.
+
+How it works:
+
+1. Developers declare entities, policies, actions, queries, events, workflows and integrations in TypeScript with `@averri/core`. Contracts come in three tiers: serializable expressions (`e.*`), database predicates (`db.*`), and opaque guard functions.
+2. A static compiler (`@averri/compiler`) reads the Prisma schema, routes, Zod schemas and declarations without executing any code, builds a semantic graph with provenance (extracted, declared, verified) and reports structured diagnostics, for example a route with no policy or a read-only endpoint that writes to the database.
+3. `@averri/testgen` generates Vitest suites: auth matrix, preconditions, postconditions, event counts, entity invariants, workflow consumers and webhook pitfalls (signature, raw body, idempotency).
+4. An MCP server (`@averri/mcp`, started with `npx -y @averri/cli mcp`) gives agents eight tools: overview, find, inspect, impact, check, explain, read_source and suggest. The same answers are available as `averri <tool> --json`.
+
+Results on the example app (a 38-route Hono + Prisma + Zod backend): 264 generated tests pass alongside 116 hand-written ones, and the compiler found a real bug (a "view billing" endpoint that wrote to the database). Averri itself has 1,033 automated tests.
+
+## Install
+
+- [npm organisation](https://www.npmjs.com/org/averri): `npm install --save-dev @averri/cli @averri/core @averri/contracts`, then `npx averri init`
+- Claude Code: `claude mcp add averri -- npx -y @averri/cli mcp`
+- Cursor (`.cursor/mcp.json`): `{ "mcpServers": { "averri": { "command": "npx", "args": ["-y", "@averri/cli", "mcp"] } } }`
+
+## Docs
+
+- [Source code on GitHub](https://github.com/abhijeethrkgadwal/averri)
+- [Getting started](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/GETTING-STARTED.md)
+- [Architecture](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/ARCHITECTURE.md)
+- [Contract language specification](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/SPEC-CONTRACTS.md)
+- [MCP tool reference](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/SPEC-MCP.md)
+- [The journey from AgentLang to Averri](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/JOURNEY.md)
+- [Benchmark pre-registration](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/BENCHMARK.md)
+
+## Optional
+
+- [Roadmap](https://github.com/abhijeethrkgadwal/averri/blob/main/docs/ROADMAP.md)
+- [Contributing](https://github.com/abhijeethrkgadwal/averri/blob/main/CONTRIBUTING.md)
+- [Founder portfolio](https://www.davnix.com/abhijeeth-gadwal)

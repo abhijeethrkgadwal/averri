@@ -1,8 +1,43 @@
 # Getting started
 
-Averri is not published to npm yet. Everything below runs from a checkout of this repository. Each
-command was run on Windows 11 (Git Bash) with Node 20.19 during the 2026-10-25 integration pass;
-the exceptions are marked **not run here** and the reason is given.
+Averri is on npm as `0.1.0-alpha.0`. Section 0 is the fastest way to try it in your own
+project. Sections 1 onward run everything from a checkout of this repository, which is what you
+want for the example app or for contributing. Each command in sections 1 onward was run on Windows 11
+(Git Bash) with Node 20.19 during the 2026-10-25 integration pass; the exceptions are marked
+**not run here** and the reason is given.
+
+## 0. Install from npm in your own project
+
+Requirements: Node.js 20+, TypeScript 5, Prisma, Hono or Express, Zod, Vitest. In the root of your
+backend:
+
+```sh
+npm install --save-dev @averri/cli @averri/core @averri/contracts
+npx averri init      # writes averri.config.ts and the agent block in CLAUDE.md / AGENTS.md / .cursor/rules
+npm install          # init adds fast-check, which the generated tests use
+npx averri build     # builds the graph and reports diagnostics
+npx averri testgen   # writes generated tests to tests/averri/
+npx averri check     # typecheck + generated and hand-written tests, structured output
+```
+
+Connect your coding agent:
+
+```sh
+claude mcp add averri -- npx -y @averri/cli mcp                                               # Claude Code
+```
+
+```json
+{ "mcpServers": { "averri": { "command": "npx", "args": ["-y", "@averri/cli", "mcp"] } } }
+```
+
+(the second snippet is `.cursor/mcp.json` for Cursor). This sequence was run on 2026-10-25 against
+the published packages in a fresh Hono + Prisma (SQLite) project: `init`, `build`, `testgen` and
+`check` succeeded with 8 of 8 generated tests passing, and `npx -y @averri/cli mcp` answered
+`initialize`, `tools/list` and an `overview` call over stdio.
+
+Your declarations go next to your routes; section 3 shows how to start from `averri suggest`.
+
+## From a checkout of this repository
 
 `$AVERRI` below is the absolute path of your checkout (for example `/c/src/averri` or `/home/me/averri`).
 
@@ -85,12 +120,10 @@ This was run against a fresh two-model Prisma + Hono project in a temp directory
 `members.averri.ts` with a policy, a query and an action, `build` bound both routes and generated two
 test files.
 
-**Not run here:** running the generated tests inside a repo outside this monorepo. They import
-`@averri/contracts` and `@averri/core`, which are unpublished and ship TypeScript sources; until the
-packages are on npm, link them from the checkout (`npm install $AVERRI/packages/core
-$AVERRI/packages/contracts $AVERRI/packages/ir`) and give the entry module a `default` (or `app`) export
-of the app, as `examples/seed-app/src/app.ts` does. `examples/seed-app/test/setup-averri.ts` shows
-the per-file database setup the generated tests expect.
+Running the generated tests inside your own repo: install `@averri/core` and `@averri/contracts`
+from npm (section 0), and give the entry module a `default` (or `app`) export of the app, as
+`examples/seed-app/src/app.ts` does. `examples/seed-app/test/setup-averri.ts` shows the per-file
+database setup the generated tests expect.
 
 ## 4. Connect your coding agent (MCP)
 

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Averri mark">
+  <rect width="120" height="120" rx="28" fill="#0b0f17"/>
+  <g fill="none" stroke="#e9eef5" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 26 C24 26 26 40 26 48 C26 56 18 60 18 60 C18 60 26 64 26 72 C26 80 24 94 36 94"/>
+    <path d="M84 26 C96 26 94 40 94 48 C94 56 102 60 102 60 C102 60 94 64 94 72 C94 80 96 94 84 94"/>
+  </g>
+  <path d="M42 61 L55 74 L79 46" fill="none" stroke="#5eead4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Averri"><title>Averri</title><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12324a"/><stop offset="1" stop-color="#0b0f17"/></linearGradient></defs>
+  <rect width="120" height="120" rx="26" fill="url(#bg)"/><g transform="translate(18 18) scale(0.7)"><defs><linearGradient id="gt" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#99f6e4"/></linearGradient></defs>
+  <path d="M60 9 L103 34 L103 86 L60 111 L17 86 L17 34 Z" fill="#0b0f17" stroke="url(#gt)" stroke-width="7.5" stroke-linejoin="round"/>
+  <path d="M37 61 L53.5 77.5 L84 44" fill="none" stroke="#5eead4" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#5eead4"><circle cx="60" cy="9" r="5.5"/><circle cx="103" cy="34" r="5.5"/><circle cx="103" cy="86" r="5.5"/><circle cx="60" cy="111" r="5.5"/><circle cx="17" cy="86" r="5.5"/><circle cx="17" cy="34" r="5.5"/></g></g></svg>

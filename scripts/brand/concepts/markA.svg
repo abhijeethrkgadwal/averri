@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Averri mark">
+  <defs>
+    <linearGradient id="bgA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12324a"/><stop offset="1" stop-color="#0b0f17"/></linearGradient>
+    <linearGradient id="tkA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#99f6e4"/></linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="url(#bgA)"/>
+  <path d="M30 63 L51 84 L91 38" fill="none" stroke="url(#tkA)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="30" cy="63" r="10" fill="#0b0f17" stroke="#5eead4" stroke-width="6"/>
+  <circle cx="51" cy="84" r="10" fill="#0b0f17" stroke="#5eead4" stroke-width="6"/>
+  <circle cx="91" cy="38" r="12" fill="#5eead4"/>
+</svg>

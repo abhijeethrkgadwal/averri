@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Averri mark">
+  <defs><linearGradient id="tkB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#99f6e4"/></linearGradient></defs>
+  <path d="M60 8 L104 33 L104 87 L60 112 L16 87 L16 33 Z" fill="#0b0f17" stroke="url(#tkB)" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M38 61 L54 77 L84 44" fill="none" stroke="#5eead4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#5eead4"><circle cx="60" cy="8" r="5"/><circle cx="104" cy="33" r="5"/><circle cx="104" cy="87" r="5"/><circle cx="60" cy="112" r="5"/><circle cx="16" cy="87" r="5"/><circle cx="16" cy="33" r="5"/></g>
+</svg>

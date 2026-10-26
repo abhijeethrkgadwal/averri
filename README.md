@@ -67,10 +67,10 @@ Deliberately absent: an IR patch language (agents edit text), session-aware delt
 
 ## Install and use
 
-Nothing is published yet. The commands below are the intended surface once the packages are on npm; until then, [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) has the exact commands to run everything from a checkout, including the MCP configuration for Claude Code and Cursor.
+The packages are on npm as `0.1.0-alpha.0`. [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md) walks through a first project, including the MCP configuration for Claude Code and Cursor.
 
 ```sh
-npm install --save-dev @averri/cli @averri/core
+npm install --save-dev @averri/cli @averri/core @averri/contracts
 npx averri init      # detects Prisma + Hono/Express + Zod, writes averri.config.ts,
                      # and adds a 40-line block to CLAUDE.md / AGENTS.md / .cursor/rules
 npx averri check     # typecheck + lint + affected generated and hand-written tests, structured output
@@ -97,7 +97,7 @@ Not a new file format or language. Not a runtime you host. Not a replacement for
 
 ## Status
 
-Pre-alpha. V0 runs end to end from a checkout; nothing is published to npm yet. To try it, follow [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md). The roadmap, with explicit non-goals, is in [docs/ROADMAP.md](docs/ROADMAP.md).
+Pre-alpha. Published on npm as `0.1.0-alpha.0` and verified by installing from the public registry into a fresh project. To try it, follow [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md). The roadmap, with explicit non-goals, is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 What works today (verified on 2026-10-25 against `examples/seed-app`, a 38-route Hono + Prisma + Zod backend):
 
@@ -109,7 +109,6 @@ What works today (verified on 2026-10-25 against `examples/seed-app`, a 38-route
 
 What does not work yet:
 
-- Not published to npm yet. The packages build to `dist` and a pack-and-install smoke test (`npm run smoke:pack`, [docs/RELEASING.md](docs/RELEASING.md)) shows the packed tarballs working in a fresh project outside this repo, but `0.1.0-alpha.0` has not been released.
 - No incremental build: a cold build of the seed app takes about 8 to 18 seconds (the spec targets under 3 seconds incremental); cached queries are instant. `check --scope all` on the seed app takes 1 to 3 minutes.
 - Fixture synthesis cannot produce row counts (`db.countWhere`), compound primary keys, or violations of clauses that mix `db.*` predicates with other conditions; those tests are emitted as `it.todo`.
 - Express support is covered by the extractor and runtime tests, not by an example app. Only Prisma, Hono/Express and Zod are supported.
