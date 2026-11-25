@@ -370,9 +370,6 @@ h3 { font-size: clamp(20px, 1.6vw, 24px); line-height: 1.25; font-weight: 700; }
   border-radius: var(--radius); border: 1px solid var(--line);
   box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .7), 0 0 0 1px rgba(94, 234, 212, .05);
 }
-.portrait-note {
-  margin: 16px 0 0; font-size: 14px; color: var(--muted); text-align: center;
-}
 .founder-split {
   display: grid;
   grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
