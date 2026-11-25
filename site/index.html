@@ -4,20 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Averri: AI writes the code. Averri knows the rules.</title>
-<meta name="description" content="Averri is a free, open-source tool that gives AI coding agents like Claude Code and Cursor the rules of your software, and generates tests that prove them.">
+<meta name="description" content="Averri is a free, open-source rule engine for AI coding agents. Declare the intent behind your TypeScript backend once—who may do what, what must stay true—so Claude Code, Cursor and CI check those rules before a PR merges.">
 <link rel="canonical" href="https://averri.org/">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="author" content="Abhijeeth Gadwal">
 <meta name="creator" content="Abhijeeth Gadwal">
-<meta name="keywords" content="Averri, AI coding agents, Claude Code, Cursor, MCP server, Model Context Protocol, TypeScript, Prisma, Hono, Express, Zod, design by contract, generated tests, open source, AgentLang">
+<meta name="publisher" content="Averri">
+<meta name="keywords" content="Averri, rule engine for AI agents, AI coding agents, Claude Code, Cursor, MCP server, Model Context Protocol, TypeScript contracts, Prisma, Hono, Express, Zod, design by contract, generated tests, PR merge checks, intent behind code, open source, AgentLang, Abhijeeth Gadwal">
 <meta name="theme-color" content="#0b0f17">
 <meta name="color-scheme" content="dark">
+<meta name="application-name" content="Averri">
+<meta name="format-detection" content="telephone=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Averri">
 <meta property="og:url" content="https://averri.org/">
 <meta property="og:title" content="Averri: AI writes the code. Averri knows the rules.">
-<meta property="og:description" content="A free, open-source tool that gives AI coding agents the rules nobody wrote down, and generates the tests that prove them.">
+<meta property="og:description" content="Open-source rule engine for AI coding agents. Capture the intent behind your backend so agents and CI respect it before every merge.">
 <meta property="og:image" content="https://averri.org/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -25,14 +30,19 @@
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Averri: AI writes the code. Averri knows the rules.">
-<meta name="twitter:description" content="A free, open-source tool that gives AI coding agents the rules nobody wrote down, and generates the tests that prove them.">
+<meta name="twitter:description" content="Open-source rule engine for AI coding agents. Capture the intent behind your backend so agents and CI respect it before every merge.">
 <meta name="twitter:image" content="https://averri.org/og-image.png">
+<meta name="twitter:image:alt" content="Averri logo with the line: AI writes the code. Averri knows the rules.">
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 <link rel="alternate" type="text/plain" title="LLM summary" href="/llms.txt">
+<link rel="alternate" type="text/plain" title="LLM full citation source" href="/llms-full.txt">
+<link rel="author" href="https://www.davnix.com/abhijeeth-gadwal">
+<link rel="me" href="https://www.linkedin.com/in/abhijeethrkgadwal/">
+<link rel="me" href="https://github.com/abhijeethrkgadwal">
 <link rel="preload" href="/assets/fonts/SpaceGrotesk.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/Inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/styles.css">
@@ -42,27 +52,89 @@
   "@context": "https://schema.org",
   "@graph": [
     {
+      "@type": "Organization",
+      "@id": "https://averri.org/#organization",
+      "name": "Averri",
+      "url": "https://averri.org/",
+      "logo": {
+        "@type": "ImageObject",
+        "@id": "https://averri.org/#logo",
+        "url": "https://averri.org/brand/averri-avatar.png",
+        "contentUrl": "https://averri.org/brand/averri-avatar.png",
+        "caption": "Averri"
+      },
+      "image": "https://averri.org/brand/averri-avatar.png",
+      "description": "Open-source rule engine for AI coding agents: contracts, semantic graph, MCP tools and generated tests for TypeScript backends.",
+      "foundingDate": "2026-10-25",
+      "founder": { "@id": "https://averri.org/#founder" },
+      "sameAs": [
+        "https://github.com/abhijeethrkgadwal/averri",
+        "https://www.npmjs.com/org/averri"
+      ],
+      "knowsAbout": [
+        "AI coding agents",
+        "Model Context Protocol",
+        "Design by contract",
+        "TypeScript",
+        "Semantic graphs",
+        "Generated tests",
+        "Pull request quality gates"
+      ],
+      "slogan": "AI writes the code. Averri knows the rules."
+    },
+    {
       "@type": "WebSite",
       "@id": "https://averri.org/#website",
       "url": "https://averri.org/",
       "name": "Averri",
-      "description": "Open-source contract and semantic-graph layer for software written by AI coding agents.",
+      "description": "Open-source rule engine and semantic-graph layer for software written by AI coding agents.",
       "inLanguage": "en",
-      "publisher": { "@id": "https://averri.org/#founder" }
+      "publisher": { "@id": "https://averri.org/#organization" },
+      "author": { "@id": "https://averri.org/#founder" },
+      "about": [{ "@id": "https://averri.org/#software" }, { "@id": "https://averri.org/#founder" }]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://averri.org/#webpage",
+      "url": "https://averri.org/",
+      "name": "Averri: AI writes the code. Averri knows the rules.",
+      "description": "Averri is a free, open-source rule engine for AI coding agents. Declare backend intent once so agents and CI respect it before every merge.",
+      "isPartOf": { "@id": "https://averri.org/#website" },
+      "about": { "@id": "https://averri.org/#software" },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://averri.org/og-image.png"
+      },
+      "inLanguage": "en",
+      "datePublished": "2026-10-25",
+      "dateModified": "2026-11-25",
+      "publisher": { "@id": "https://averri.org/#organization" },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [".averri-definition", ".averri-summary", ".averri-faq"]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://averri.org/#breadcrumb",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Averri", "item": "https://averri.org/" }
+      ]
     },
     {
       "@type": "SoftwareApplication",
       "@id": "https://averri.org/#software",
       "name": "Averri",
-      "alternateName": ["averri", "@averri/cli", "AgentLang"],
+      "alternateName": ["averri", "@averri/cli", "AgentLang", "Averr"],
       "url": "https://averri.org/",
-      "description": "Averri lets developers declare the rules of a TypeScript backend (who may do what, what must be true before and after each action, which events must fire) in plain TypeScript. It compiles them into a semantic graph that AI coding agents query over the Model Context Protocol, and generates tests that prove the rules hold.",
+      "description": "Averri lets developers declare the rules and intent of a TypeScript backend (who may do what, what must be true before and after each action, which events must fire) in plain TypeScript. It compiles them into a semantic graph that AI coding agents query over the Model Context Protocol, generates tests that prove the rules hold, and helps teams check those rules before a pull request merges.",
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "AI coding agent tooling",
       "operatingSystem": "Windows, macOS, Linux (Node.js 20 or later)",
       "softwareVersion": "0.1.0-alpha.0",
       "releaseNotes": "https://github.com/abhijeethrkgadwal/averri/releases",
       "datePublished": "2026-10-25",
+      "dateModified": "2026-11-25",
       "license": "https://www.apache.org/licenses/LICENSE-2.0",
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -70,17 +142,19 @@
       "installUrl": "https://www.npmjs.com/org/averri",
       "softwareRequirements": "Node.js 20+, TypeScript 5, Prisma, Hono or Express, Zod",
       "featureList": [
-        "Declare policies, preconditions, postconditions and events in plain TypeScript",
+        "Declare policies, preconditions, postconditions, events and intent in plain TypeScript",
         "Static compiler that never executes your code",
         "Semantic graph of entities, routes, actions, policies, contracts and events",
         "Generated tests: auth matrix, preconditions, postconditions, events, invariants, webhook pitfalls",
         "MCP server with tools for AI coding agents: overview, find, inspect, impact, check, explain, read_source, suggest",
+        "CI-friendly averri check for pull-request confidence before merge",
         "Works with Claude Code, Cursor and any MCP-compatible agent"
       ],
       "image": "https://averri.org/brand/averri-avatar.png",
       "screenshot": "https://averri.org/og-image.png",
       "author": { "@id": "https://averri.org/#founder" },
       "creator": { "@id": "https://averri.org/#founder" },
+      "publisher": { "@id": "https://averri.org/#organization" },
       "sameAs": [
         "https://github.com/abhijeethrkgadwal/averri",
         "https://www.npmjs.com/org/averri"
@@ -95,26 +169,84 @@
       "runtimePlatform": "Node.js",
       "license": "https://www.apache.org/licenses/LICENSE-2.0",
       "author": { "@id": "https://averri.org/#founder" },
+      "maintainer": { "@id": "https://averri.org/#founder" },
       "targetProduct": { "@id": "https://averri.org/#software" }
     },
     {
       "@type": "Person",
       "@id": "https://averri.org/#founder",
       "name": "Abhijeeth Gadwal",
+      "alternateName": ["Abhijeeth R K Gadwal", "Abhijeeth RK Gadwal", "Abhijit Gadwal"],
       "jobTitle": "AI Product Manager and founder of Averri",
+      "description": "Abhijeeth Gadwal is an AI product manager, product leader and founder who created Averri, an open-source rule engine for AI coding agents.",
       "url": "https://www.davnix.com/abhijeeth-gadwal",
+      "image": "https://www.davnix.com/teams/abhijeeth.png",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Davnix Tech",
+        "url": "https://www.davnix.com/"
+      },
+      "knowsAbout": [
+        "AI Product Management",
+        "AI coding agents",
+        "MCP tooling",
+        "SaaS",
+        "Open source",
+        "Product strategy"
+      ],
       "sameAs": [
         "https://www.linkedin.com/in/abhijeethrkgadwal/",
         "https://www.davnix.com/abhijeeth-gadwal",
-        "https://github.com/abhijeethrkgadwal"
+        "https://github.com/abhijeethrkgadwal",
+        "https://x.com/abhijeethrk",
+        "https://topmate.io/abhijeeth_gadwal/"
+      ]
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://averri.org/#howto-install",
+      "name": "How to install Averri for Claude Code or Cursor",
+      "description": "Install Averri on a TypeScript Prisma backend and connect it to an MCP-compatible coding agent.",
+      "totalTime": "PT2M",
+      "tool": [
+        { "@type": "HowToTool", "name": "Node.js 20+" },
+        { "@type": "HowToTool", "name": "npm" }
+      ],
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Install packages",
+          "text": "Run npm install --save-dev @averri/cli @averri/core @averri/contracts"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Initialise Averri",
+          "text": "Run npx averri init to detect Prisma + Hono/Express + Zod and write averri.config.ts"
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Connect your agent",
+          "text": "For Claude Code run claude mcp add averri -- npx -y @averri/cli mcp. For Cursor save an MCP config that launches npx -y @averri/cli mcp."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 4,
+          "name": "Check before merge",
+          "text": "Run npx averri check on affected changes so weakened rules and broken invariants surface before the pull request merges."
+        }
       ]
     },
     {
       "@type": "FAQPage",
       "@id": "https://averri.org/#faq",
+      "url": "https://averri.org/",
       "mainEntity": [
-        { "@type": "Question", "name": "What is Averri?", "acceptedAnswer": { "@type": "Answer", "text": "Averri is a free, open-source tool that lets you write down the rules of your software, such as who is allowed to do what and what must always be true, so that AI coding agents check those rules instead of guessing them, and so that automatically generated tests prove the rules hold." } },
+        { "@type": "Question", "name": "What is Averri?", "acceptedAnswer": { "@type": "Answer", "text": "Averri is a free, open-source rule engine that lets you write down the rules and intent of your software, such as who is allowed to do what and what must always be true, so that AI coding agents check those rules instead of guessing them, and so that automatically generated tests prove the rules hold before a pull request merges." } },
         { "@type": "Question", "name": "Who is Averri for?", "acceptedAnswer": { "@type": "Answer", "text": "Averri is for teams whose backend code is increasingly written by AI coding agents such as Claude Code or Cursor, and for the founders, product managers, engineers and researchers who need to trust that code." } },
+        { "@type": "Question", "name": "Why do AI agents need Averri before a PR merge?", "acceptedAnswer": { "@type": "Answer", "text": "Agents often see code that compiles and tests they wrote in the same session, but not the product intent behind earlier decisions. Averri makes that intent and those rules checkable on every change, so a merge does not quietly interrupt a working user flow." } },
         { "@type": "Question", "name": "Is Averri free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Averri is free and open source under the Apache-2.0 license. There is no paid tier, no telemetry and no hosted service." } },
         { "@type": "Question", "name": "How does Averri work with Claude Code and Cursor?", "acceptedAnswer": { "@type": "Answer", "text": "Averri runs as an MCP (Model Context Protocol) server. You add it with one command, for example claude mcp add averri -- npx -y @averri/cli mcp, and the agent can then ask Averri about rules, dependencies, the impact of a change, and whether its change passes the generated tests." } },
         { "@type": "Question", "name": "Which tech stacks does Averri support?", "acceptedAnswer": { "@type": "Answer", "text": "Version 0.1 supports TypeScript backends on Node.js 20 or later that use Prisma, either Hono or Express, and Zod." } },
@@ -132,6 +264,7 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
+<div class="scroll-progress" aria-hidden="true"></div>
 <canvas id="field" aria-hidden="true"></canvas>
 
 <header class="nav" id="nav">
@@ -142,6 +275,7 @@
     <nav aria-label="Primary">
       <ul class="nav-links" id="nav-links">
         <li><a href="#why">Why</a></li>
+        <li><a href="#merge">Before merge</a></li>
         <li><a href="#how">How it works</a></li>
         <li><a href="#developers">Developers</a></li>
         <li><a href="#story">Story</a></li>
@@ -164,9 +298,10 @@
 <section class="hero" id="top">
   <div class="wrap hero-grid">
     <div class="hero-copy">
+      <p class="brand-hero"><img src="/brand/averri-mark.svg" alt="" width="48" height="48"><span>Averri</span></p>
       <p class="pill reveal"><span class="dot"></span>Open source · v0.1.0-alpha.0 · Apache-2.0</p>
       <h1 class="reveal">AI writes the code.<br><span class="grad">Averri knows the rules.</span></h1>
-      <p class="lead reveal">Write down the rules of your software once: who is allowed to do what, and what must always be true. Averri turns them into facts your AI coding agent checks instead of guessing, and tests that prove they hold.</p>
+      <p class="lead averri-summary reveal">Write down the intent behind your software once: who is allowed to do what, what must always be true, and why that decision exists. Averri turns it into facts your AI coding agent checks instead of guessing—and tests that prove the rules hold before a PR merges.</p>
       <div class="hero-actions reveal">
         <a class="btn btn-primary" href="#developers">Get started</a>
         <a class="btn btn-ghost" href="#why">What is this?</a>
@@ -190,7 +325,7 @@
   </div>
 
   <dl class="facts wrap reveal" aria-label="Averri at a glance">
-    <div><dt>What</dt><dd>Rules and tests for code written by AI</dd></div>
+    <div><dt>What</dt><dd>Rule engine for AI-written code</dd></div>
     <div><dt>Price</dt><dd>Free, open source</dd></div>
     <div><dt>Works with</dt><dd>Claude Code, Cursor, MCP agents</dd></div>
     <div><dt>Stack</dt><dd>TypeScript · Prisma · Hono/Express · Zod</dd></div>
@@ -201,7 +336,8 @@
 <section class="section" id="why" aria-labelledby="why-title">
   <div class="wrap">
     <p class="eyebrow reveal">Why Averri exists</p>
-    <h2 id="why-title" class="reveal">A brilliant new hire who is always on day one.</h2>
+    <h2 id="why-title" class="reveal">Agents see code. They miss the intent.</h2>
+    <p class="averri-definition lead reveal">Averri is a free, open-source rule engine for AI coding agents. You declare what your backend must protect—and why—so agents work around those decisions instead of interrupting the product flow.</p>
 
     <div class="switch reveal" role="tablist" aria-label="Choose an explanation">
       <button role="tab" aria-selected="true" aria-controls="exp-plain" id="tab-plain" class="on">Explain it simply</button>
@@ -210,26 +346,52 @@
 
     <div class="explain">
       <div class="exp-panel on" id="exp-plain" role="tabpanel" aria-labelledby="tab-plain">
-        <p class="big">AI assistants now write a large share of the world's software. They are fast and talented. But every task starts like a first day at work: they don't know the unwritten rules.</p>
+        <p class="big">AI assistants now write a large share of the world's software. They are fast and talented. But every task starts like a first day at work: they don't know the unwritten rules, or the reason those rules exist.</p>
         <ul class="rules">
           <li><span>Only managers</span> can approve refunds.</li>
           <li>A customer must <span>never be charged twice</span>.</li>
           <li>The billing page is <span>read-only</span>.</li>
         </ul>
         <p>Nobody wrote these down. They live in people's heads. So the AI does the job well and sometimes quietly breaks a rule it never knew existed. A smarter AI is still a new hire with no handbook.</p>
-        <p class="hl">Averri is the handbook, and the building inspector. You write the rules once. The AI reads them before it changes anything, and automatic tests check them every time.</p>
+        <p class="hl">Averri is the handbook, and the building inspector. You write the rules once, with the intent behind them. The AI reads them before it changes anything, and automatic tests check them before merge.</p>
       </div>
       <div class="exp-panel" id="exp-dev" role="tabpanel" aria-labelledby="tab-dev" hidden>
-        <p class="big">Coding agents are good at code that compiles. They're weak at invariants that live outside the code: authorization, idempotency, pre- and postconditions, event guarantees.</p>
+        <p class="big">Coding agents are good at code that compiles. They're weak at invariants that live outside the code: authorization, idempotency, pre- and postconditions, event guarantees, and the product intent that explains why a path looks the way it does.</p>
         <ul class="rules">
           <li>Missing <span>policy</span> on a new route</li>
           <li>Webhook handler without <span>idempotency</span> or raw-body signature check</li>
           <li>A "GET" that <span>writes</span> to the database</li>
         </ul>
-        <p>Averri adds a typed declaration layer to an existing Prisma + Hono/Express + Zod backend. A static compiler turns declarations into a semantic graph with provenance (<code>extracted</code>, <code>declared</code>, <code>verified</code>), emits structured diagnostics, and generates Vitest suites. Agents query it over MCP: <code>inspect</code> before editing, <code>impact</code> before changing, <code>check</code> before finishing.</p>
+        <p>Averri adds a typed declaration layer to an existing Prisma + Hono/Express + Zod backend. A static compiler turns declarations into a semantic graph with provenance (<code>extracted</code>, <code>declared</code>, <code>verified</code>), emits structured diagnostics, and generates Vitest suites. Agents query it over MCP: <code>inspect</code> before editing, <code>impact</code> before changing, <code>check</code> before finishing a PR.</p>
         <p class="hl">No new syntax, no runtime to host, no application code generated. Remove the imports and your app is exactly what it was.</p>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- BEFORE MERGE -->
+<section class="section" id="merge" aria-labelledby="merge-title">
+  <div class="wrap">
+    <p class="eyebrow reveal">Before every PR merge</p>
+    <h2 id="merge-title" class="reveal">Know what changed, and why the original decision still stands.</h2>
+    <p class="lead reveal">When a particular section of code has not clearly stated its intent, agents treat it as just code. Averri makes that intent strict and checkable—so merges do not interrupt a working user flow.</p>
+    <ol class="merge-grid">
+      <li class="reveal">
+        <span class="n">01</span>
+        <h3>Declare the decision</h3>
+        <p>Capture who may act, what must stay true, and the intent field that records why the decision was taken.</p>
+      </li>
+      <li class="reveal">
+        <span class="n">02</span>
+        <h3>Agents ask before they edit</h3>
+        <p>Claude Code, Cursor and other MCP agents call <code>inspect</code>, <code>impact</code> and <code>check</code> instead of guessing your invariants.</p>
+      </li>
+      <li class="reveal">
+        <span class="n">03</span>
+        <h3>CI proves confidence</h3>
+        <p><code>averri check</code> surfaces weakened rules, missing policies and broken guarantees on the pull request—before merge.</p>
+      </li>
+    </ol>
   </div>
 </section>
 
@@ -406,9 +568,10 @@ npx averri overview --json          <span class="c"># same answers from the comm
     <p class="eyebrow reveal">The story</p>
     <h2 id="story-title" class="reveal">I asked AI if I should build it.<br><span class="no">It said no.</span> I built it anyway.</h2>
     <ol class="timeline">
+      <li class="reveal"><time datetime="2026-10">The spark</time><h3>Agents are powerful—and risky without intent</h3><p>Watching what agents can do also showed what goes wrong when a section of code never states its intent: the model assumes "this is just code," and a working user flow quietly breaks.</p></li>
       <li class="reveal"><time datetime="2026-10">The question</time><h3>AgentLang</h3><p>What if a programming language were designed for AI agents first? Fewer wasted tokens, self-explaining errors, software that carries its own map.</p></li>
       <li class="reveal"><time datetime="2026-10">The research</time><h3>AI argued against the idea</h3><p>A research sweep, three competing strategies and six critics. It killed most of the idea: a brand-new language is the one language AI has never seen, so it makes <em>more</em> mistakes.</p></li>
-      <li class="reveal"><time datetime="2026-10">What survived</time><h3>The unwritten rules</h3><p>AI already writes code that runs. What it can't know is the rules nobody wrote down. That gap doesn't close as models get smarter, because the rules were never in the code.</p></li>
+      <li class="reveal"><time datetime="2026-10">What survived</time><h3>A rule engine for agents</h3><p>Keep the stack teams already deploy. Make the rules and the why machine-checkable before every PR merge, so agents work around decisions instead of interrupting them.</p></li>
       <li class="reveal"><time datetime="2026-10-24">The verdict</time><h3>Three AI judges said pass</h3><p>About 70% confidence each, as a business. Crowded market, slow revenue. They were probably right about the business.</p></li>
       <li class="reveal"><time datetime="2026-10-24">The decision</time><h3>Build it anyway, in the open</h3><p>No company, no paid tiers. A free tool, a public benchmark plan and written kill criteria: if agents don't measurably do better work with Averri, that result gets published too.</p></li>
       <li class="reveal"><time datetime="2026-10-25">Shipped</time><h3>Averri 0.1.0-alpha.0</h3><p>Eight packages on npm, verified from the public registry. The name took five tries: AgentLang, Warrant, Surety, Averr, Averri. From <em>aver</em>: to state something as true.</p></li>
@@ -466,13 +629,14 @@ npx averri overview --json          <span class="c"># same answers from the comm
 </section>
 
 <!-- FAQ -->
-<section class="section" id="faq" aria-labelledby="faq-title">
+<section class="section averri-faq" id="faq" aria-labelledby="faq-title">
   <div class="wrap narrow">
     <p class="eyebrow reveal">Questions</p>
     <h2 id="faq-title" class="reveal">Frequently asked</h2>
     <div class="faq">
-      <details class="reveal"><summary>What is Averri?</summary><p>Averri is a free, open-source tool that lets you write down the rules of your software, such as who is allowed to do what and what must always be true, so that AI coding agents check those rules instead of guessing them, and automatically generated tests prove the rules hold.</p></details>
+      <details class="reveal"><summary>What is Averri?</summary><p>Averri is a free, open-source rule engine that lets you write down the rules and intent of your software, such as who is allowed to do what and what must always be true, so that AI coding agents check those rules instead of guessing them, and automatically generated tests prove the rules hold before a pull request merges.</p></details>
       <details class="reveal"><summary>Who is Averri for?</summary><p>Teams whose backend code is increasingly written by AI coding agents such as Claude Code or Cursor, and the founders, product managers, engineers and researchers who need to trust that code.</p></details>
+      <details class="reveal"><summary>Why do AI agents need Averri before a PR merge?</summary><p>Agents often see code that compiles and tests they wrote in the same session, but not the product intent behind earlier decisions. Averri makes that intent and those rules checkable on every change, so a merge does not quietly interrupt a working user flow.</p></details>
       <details class="reveal"><summary>Is Averri free?</summary><p>Yes. Averri is free and open source under the Apache-2.0 license. There is no paid tier, no telemetry and no hosted service.</p></details>
       <details class="reveal"><summary>How does Averri work with Claude Code and Cursor?</summary><p>Averri runs as an MCP (Model Context Protocol) server. Add it with one command, for example <code>claude mcp add averri -- npx -y @averri/cli mcp</code>, and the agent can ask Averri about rules, dependencies, the impact of a change, and whether its change passes the generated tests.</p></details>
       <details class="reveal"><summary>Which tech stacks does Averri support?</summary><p>Version 0.1 supports TypeScript backends on Node.js 20 or later that use Prisma, either Hono or Express, and Zod.</p></details>
@@ -481,7 +645,7 @@ npx averri overview --json          <span class="c"># same answers from the comm
       <details class="reveal"><summary>How is Averri different from AI code review tools?</summary><p>AI code reviewers infer intent from a diff. Averri works from rules a human wrote and approved, turns them into deterministic tests and graph facts, and flags any change that weakens a rule, whether a human or an AI made it.</p></details>
       <details class="reveal"><summary>Is Averri a new programming language?</summary><p>No. Averri began as AgentLang, an idea for a new language designed for AI agents. Research showed a new language would make AI agents less accurate, so Averri uses plain TypeScript instead.</p></details>
       <details class="reveal"><summary>Is Averri ready for production?</summary><p>Not yet. Version 0.1.0-alpha.0 is a pre-alpha release. It is tested, with over a thousand automated tests, but its interfaces may change.</p></details>
-      <details class="reveal"><summary>Who created Averri?</summary><p>Averri was founded and curated by <a href="https://www.linkedin.com/in/abhijeethrkgadwal/" rel="noopener">Abhijeeth Gadwal</a>, an AI product manager, and built with the help of AI coding agents.</p></details>
+      <details class="reveal"><summary>Who created Averri?</summary><p>Averri was founded and curated by <a href="https://www.davnix.com/abhijeeth-gadwal" rel="noopener author">Abhijeeth Gadwal</a>, an AI product manager, and built with the help of AI coding agents.</p></details>
     </div>
   </div>
 </section>
@@ -492,7 +656,8 @@ npx averri overview --json          <span class="c"># same answers from the comm
   <div class="wrap foot-grid">
     <div class="foot-brand">
       <img src="/brand/averri-logo-dark.svg" alt="Averri" width="133" height="40" loading="lazy">
-      <p>Rules and tests for software written by AI. Free and open source.</p>
+      <p>Rule engine for software written by AI. Free and open source.</p>
+      <p class="foot-cite"><a href="/llms.txt">llms.txt</a> · <a href="/llms-full.txt">llms-full.txt</a> · <a href="/ai.txt">ai.txt</a></p>
     </div>
     <nav class="foot-col" aria-label="Project">
       <h4>Project</h4>

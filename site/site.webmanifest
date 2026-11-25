@@ -1,7 +1,7 @@
 {
   "name": "Averri",
   "short_name": "Averri",
-  "description": "Rules and tests for software written by AI. Free and open source.",
+  "description": "Open-source rule engine for AI coding agents. Free Apache-2.0.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0f17",

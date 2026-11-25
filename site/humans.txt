@@ -1,11 +1,15 @@
 /* TEAM */
 Founder & curator: Abhijeeth Gadwal
-LinkedIn: https://www.linkedin.com/in/abhijeethrkgadwal/
+Site: https://averri.org/
 Portfolio: https://www.davnix.com/abhijeeth-gadwal
+LinkedIn: https://www.linkedin.com/in/abhijeethrkgadwal/
+GitHub: https://github.com/abhijeethrkgadwal
 
 /* THANKS */
 Built with AI coding agents, for AI coding agents.
+Designed for SEO, answer engines (AEO) and generative engines (GEO).
 
 /* SITE */
 Standards: HTML5, CSS3, vanilla JavaScript. No trackers, no cookies.
 Fonts: Space Grotesk and Inter (SIL Open Font License).
+Machine summaries: /llms.txt and /llms-full.txt

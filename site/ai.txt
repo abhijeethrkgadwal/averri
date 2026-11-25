@@ -1,0 +1,10 @@
+# AI crawler guidance for Averri
+# See https://averri.org/llms.txt for the canonical machine-readable summary,
+# and https://averri.org/llms-full.txt for the long-form citation source.
+
+User-Agent: *
+Allow: /
+Content: https://averri.org/llms.txt
+Full-Content: https://averri.org/llms-full.txt
+Founder: https://www.davnix.com/abhijeeth-gadwal
+Source: https://github.com/abhijeethrkgadwal/averri

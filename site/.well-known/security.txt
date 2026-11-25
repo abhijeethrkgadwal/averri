@@ -1,0 +1,5 @@
+Contact: https://github.com/abhijeethrkgadwal/averri/security/advisories/new
+Expires: 2027-11-25T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://averri.org/.well-known/security.txt
+Policy: https://github.com/abhijeethrkgadwal/averri/blob/main/SECURITY.md

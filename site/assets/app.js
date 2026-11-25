@@ -109,12 +109,12 @@
     ["c-call", 'averri.find("remove member")'],
     ["c-out", "Action:Team.removeMember · src/routes/members.ts:88"],
     ["c-call", 'averri.inspect("Action:Team.removeMember")'],
-    ["c-out", "policy: owner or admin · requires: not the last owner"],
+    ["c-out", "intent: owners/admins only · policy: OwnerOrAdmin"],
     ["c-call", 'averri.impact("Action:Team.removeMember")'],
     ["c-out", "2 routes · 1 event · 14 tests to run"],
     ["c-warn", "agent edits src/routes/members.ts …"],
     ["c-call", 'averri.check({ scope: "affected" })'],
-    ["c-ok", "✓ 14 passed · 0 rules weakened"],
+    ["c-ok", "✓ 14 passed · 0 rules weakened · ready to merge"],
   ];
   if (consoleEl) {
     const render = (n) => {

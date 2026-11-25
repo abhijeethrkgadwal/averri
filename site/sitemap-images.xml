@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://averri.org/</loc>
+    <image:image>
+      <image:loc>https://averri.org/og-image.png</image:loc>
+      <image:title>Averri: AI writes the code. Averri knows the rules.</image:title>
+      <image:caption>Open-source rule engine for AI coding agents: contracts, semantic graph, MCP tools and generated tests.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://averri.org/brand/averri-avatar.png</image:loc>
+      <image:title>Averri mark</image:title>
+      <image:caption>Averri seal: a hexagon whose corner nodes are the semantic graph, with a check for verified facts.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://averri.org/brand/averri-logo-dark.png</image:loc>
+      <image:title>Averri logo on dark</image:title>
+    </image:image>
+  </url>
+</urlset>

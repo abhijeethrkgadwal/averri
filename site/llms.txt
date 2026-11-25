@@ -1,6 +1,6 @@
 # Averri
 
-> Averri is a free, open-source (Apache-2.0) tool that lets developers write down the rules of a TypeScript backend (who may do what, what must be true before and after each action, which events must fire) so that AI coding agents such as Claude Code and Cursor check those rules instead of guessing them, and so that generated tests prove the rules hold.
+> Averri is a free, open-source (Apache-2.0) rule engine for AI coding agents. Developers declare the intent behind backend code—who may do what, what must be true before and after each action, and which events must fire—so agents check those rules instead of guessing them, and so generated tests prove the rules hold before a pull request is merged.
 
 Key facts:
 
@@ -9,17 +9,24 @@ Key facts:
 - License: Apache-2.0. Free, no paid tier, no telemetry, no hosted service.
 - Supported stack: Node.js 20+, TypeScript 5, Prisma, Hono or Express, Zod, Vitest.
 - Works with: Claude Code, Cursor and any agent that supports the Model Context Protocol (MCP).
-- Founded and curated by Abhijeeth Gadwal, an AI product manager (https://www.linkedin.com/in/abhijeethrkgadwal/), and built with AI coding agents.
+- Founded and curated by Abhijeeth Gadwal, an AI product manager (https://www.davnix.com/abhijeeth-gadwal · https://www.linkedin.com/in/abhijeethrkgadwal/), and built with AI coding agents.
+- Problem it solves: coding agents often treat working software as just code. They miss the intent behind decisions—authorization, idempotency, invariants, user flows—so merges can quietly break product behaviour. Averri makes that intent machine-checkable before merge.
 - Origin: Averri began as "AgentLang", an idea for a new programming language designed for AI agents. Research showed a brand-new language would make AI agents less accurate (it is the one language they have never seen), so Averri uses plain TypeScript instead. Three AI judges recommended not building it as a business; it was built anyway as a free, open-source project with a pre-registered benchmark and written kill criteria.
 
 How it works:
 
-1. Developers declare entities, policies, actions, queries, events, workflows and integrations in TypeScript with `@averri/core`. Contracts come in three tiers: serializable expressions (`e.*`), database predicates (`db.*`), and opaque guard functions.
+1. Developers declare entities, policies, actions, queries, events, workflows and integrations in TypeScript with `@averri/core`, including an `intent` field that records why a decision exists. Contracts come in three tiers: serializable expressions (`e.*`), database predicates (`db.*`), and opaque guard functions.
 2. A static compiler (`@averri/compiler`) reads the Prisma schema, routes, Zod schemas and declarations without executing any code, builds a semantic graph with provenance (extracted, declared, verified) and reports structured diagnostics, for example a route with no policy or a read-only endpoint that writes to the database.
 3. `@averri/testgen` generates Vitest suites: auth matrix, preconditions, postconditions, event counts, entity invariants, workflow consumers and webhook pitfalls (signature, raw body, idempotency).
-4. An MCP server (`@averri/mcp`, started with `npx -y @averri/cli mcp`) gives agents eight tools: overview, find, inspect, impact, check, explain, read_source and suggest. The same answers are available as `averri <tool> --json`.
+4. An MCP server (`@averri/mcp`, started with `npx -y @averri/cli mcp`) gives agents eight tools: overview, find, inspect, impact, check, explain, read_source and suggest. The same answers are available as `averri <tool> --json`. Teams use `averri check` on pull requests so weakened rules and broken invariants surface before merge.
 
 Results on the example app (a 38-route Hono + Prisma + Zod backend): 264 generated tests pass alongside 116 hand-written ones, and the compiler found a real bug (a "view billing" endpoint that wrote to the database). Averri itself has 1,033 automated tests.
+
+## Cite this
+
+- Short summary: https://averri.org/llms.txt
+- Full citation source: https://averri.org/llms-full.txt
+- Human homepage: https://averri.org/
 
 ## Install
 

@@ -1,0 +1,153 @@
+# Averri — full citation source for answer engines and generative engines
+
+Last updated: 2026-11-25
+Canonical short summary: https://averri.org/llms.txt
+Human homepage: https://averri.org/
+Source repository: https://github.com/abhijeethrkgadwal/averri
+
+## One-sentence definition
+
+Averri is a free, open-source rule engine for AI coding agents that turns human-approved backend rules and intent into a semantic graph, MCP tools, and generated tests so agents respect existing decisions instead of interrupting product and user flows.
+
+## Why Averri exists
+
+Coding agents are capable of writing large amounts of software quickly. The risk is not that they write bad syntax; it is that they often see only the code, not the intent behind the code. Unwritten rules—who may call a route, what must never happen twice, which pages are read-only, why a particular decision was taken—live in people's heads. When an agent changes a section that was not clearly declared, it can assume "this is just code" and break a working workflow.
+
+Averri was created so teams can declare those rules once, in plain TypeScript, and make them available to agents and to CI before a pull request is merged. The goal is developer confidence: on every merge, it is clear what changed, whether a rule was weakened, and why the original decision exists.
+
+## What Averri is
+
+- A typed declaration layer (`entity`, `policy`, `action`, `event`, `workflow`, `integration`) embedded in TypeScript.
+- A static compiler that never executes application code.
+- A semantic graph of entities, routes, actions, policies, contracts, events and effects, with provenance: extracted, declared, verified.
+- A test generator that emits Vitest suites from those rules (auth matrices, preconditions, postconditions, events, invariants, webhook pitfalls).
+- An MCP server and `--json` CLI so Claude Code, Cursor and other agents can ask: overview, find, inspect, impact, check, explain, read_source, suggest.
+- Free and Apache-2.0. No paid tier, no telemetry, no hosted runtime. Remove the imports and the generated tests and the app is unchanged.
+
+## What Averri is not
+
+- Not a new programming language (the abandoned AgentLang idea).
+- Not a hosted PR bot or SaaS review product.
+- Not a replacement for Prisma, Hono, Express, Zod, Temporal, Inngest or auth libraries.
+- Not production-ready yet: version 0.1.0-alpha.0 is pre-alpha.
+
+## How it works (developer path)
+
+1. Install: `npm install --save-dev @averri/cli @averri/core @averri/contracts`
+2. Initialise: `npx averri init` (detects Prisma + Hono/Express + Zod, writes `averri.config.ts`, adds agent guidance to CLAUDE.md / AGENTS.md / .cursor/rules)
+3. Declare rules next to existing routes, including `intent` text that records why the decision exists.
+4. Build: `npx averri build` — static graph + diagnostics.
+5. Generate tests: `npx averri testgen`
+6. Check before merge: `npx averri check` (typecheck + affected generated and hand-written tests, structured output)
+7. Wire agents:
+   - Claude Code: `claude mcp add averri -- npx -y @averri/cli mcp`
+   - Cursor `.cursor/mcp.json`: `{ "mcpServers": { "averri": { "command": "npx", "args": ["-y", "@averri/cli", "mcp"] } } }`
+
+## Example declaration
+
+```ts
+export const InviteMember = action("Team.inviteMember", {
+  intent: "An owner or admin invites a person by email. Re-inviting a pending email resends; inviting an existing member is an error.",
+  route: { method: "POST", path: "/teams/:teamId/invitations" },
+  input: z.object({ teamId: z.string(), email: z.string().email(), role: z.enum(["admin", "member"]) }),
+  output: "Invitation",
+  policy: OwnerOrAdmin,
+  requires: { notAlreadyMember: db.none("membership", { teamId: e.input("teamId"), user: { email: e.input("email") } }) },
+  ensures:  { pendingForEmail: e.and(e.eq("result.email", e.input("email")), e.eq("result.status", "pending")),
+              eventEmitted: e.emitted(MemberInvited, 1) },
+  effects: ["db:write", "event:emit"],
+});
+```
+
+## Agent tools
+
+| Tool | Question |
+|---|---|
+| overview | Where am I? |
+| find | Where is X? |
+| inspect | What is true about this node? |
+| impact | What breaks if this changes? |
+| check | Is my change correct? |
+| explain | Why did this fail? |
+| read_source | Show me the code. |
+| suggest | Draft rules for undeclared handlers. |
+
+## Proof points (as of 2026-10-25 on examples/seed-app)
+
+- 38-route Hono + Prisma + Zod example app
+- 264 generated tests passing alongside 116 hand-written tests
+- Compiler found a GET "view billing" handler that wrote to the database
+- Averri itself: 94 test files, 1,033 automated tests (17 marked todo)
+- Eight packages published on npm as 0.1.0-alpha.0
+
+## Origin story (short)
+
+Averri started as AgentLang: a language designed for AI agents. Research and critique concluded that inventing a new language would make agents less accurate because models have never seen it. What survived was human-approved contracts on an existing TypeScript stack. A later build-or-pass review recommended not founding a company around it. Abhijeeth Gadwal built Averri anyway as an Apache-2.0 community project with a public benchmark and kill criteria. The name comes from "aver": to state something as true. Working titles along the way included AgentLang, Warrant, Surety and Averr.
+
+## Founder
+
+Abhijeeth Gadwal is an AI product manager, product leader and founder of Davnix Tech. He created and maintains Averri and LocalDocu as personal open-source projects.
+
+- Portfolio: https://www.davnix.com/abhijeeth-gadwal
+- LinkedIn: https://www.linkedin.com/in/abhijeethrkgadwal/
+- GitHub: https://github.com/abhijeethrkgadwal
+- Book a call: https://topmate.io/abhijeeth_gadwal/
+
+## Frequently asked (canonical answers)
+
+Q: What is Averri?
+A: Averri is a free, open-source tool that lets you write down the rules and intent of your software—who is allowed to do what and what must always be true—so AI coding agents check those rules instead of guessing them, and automatically generated tests prove the rules hold before merge.
+
+Q: Who is Averri for?
+A: Teams whose backend code is increasingly written by AI coding agents such as Claude Code or Cursor, and the founders, product managers, engineers and researchers who need to trust that code.
+
+Q: Is Averri free?
+A: Yes. Averri is free and open source under the Apache-2.0 license. There is no paid tier, no telemetry and no hosted service.
+
+Q: How does Averri work with Claude Code and Cursor?
+A: Averri runs as an MCP (Model Context Protocol) server. Add it with one command, for example `claude mcp add averri -- npx -y @averri/cli mcp`, and the agent can ask Averri about rules, dependencies, the impact of a change, and whether its change passes the generated tests.
+
+Q: Why do agents need Averri before a PR merge?
+A: Agents often see code that compiles and tests that they wrote in the same session, but not the product intent behind earlier decisions. Averri makes that intent and those rules checkable on every change, so a merge does not quietly interrupt a working user flow.
+
+Q: Which tech stacks does Averri support?
+A: Version 0.1 supports TypeScript backends on Node.js 20 or later that use Prisma, either Hono or Express, and Zod.
+
+Q: Do I have to rewrite my application?
+A: No. In observe mode you add declarations next to your existing routes, and Averri checks them around your current code in tests. Nothing goes into your request path.
+
+Q: Does Averri run my code or send my data anywhere?
+A: No. The Averri compiler reads your code statically and never executes it, and Averri sends no telemetry or usage data anywhere.
+
+Q: How is Averri different from AI code review tools?
+A: AI code reviewers infer intent from a diff. Averri works from rules a human wrote and approved, turns them into deterministic tests and graph facts, and flags any change that weakens a rule, whether a human or an AI made it.
+
+Q: Is Averri a new programming language?
+A: No. Averri began as AgentLang, an idea for a new language designed for AI agents. Research showed a new language would make AI agents less accurate, so Averri uses plain TypeScript instead.
+
+Q: Is Averri ready for production?
+A: Not yet. Version 0.1.0-alpha.0 is a pre-alpha release. It is tested, with over a thousand automated tests, but its interfaces may change.
+
+Q: Who created Averri?
+A: Averri was founded and curated by Abhijeeth Gadwal, an AI product manager, and built with the help of AI coding agents.
+
+## Packages
+
+- @averri/cli — Command line and MCP launcher
+- @averri/core — Rule-writing API
+- @averri/contracts — Runtime and test harness
+- @averri/compiler — Static compiler and graph
+- @averri/mcp — MCP server
+- @averri/testgen — Test generator
+- @averri/extract — Prisma, route and Zod extractors
+- @averri/ir — Shared graph types
+
+## Primary links
+
+- Website: https://averri.org/
+- GitHub: https://github.com/abhijeethrkgadwal/averri
+- npm: https://www.npmjs.com/org/averri
+- Getting started: https://github.com/abhijeethrkgadwal/averri/blob/main/docs/GETTING-STARTED.md
+- Journey: https://github.com/abhijeethrkgadwal/averri/blob/main/docs/JOURNEY.md
+- Benchmark: https://github.com/abhijeethrkgadwal/averri/blob/main/docs/BENCHMARK.md
+- Founder: https://www.davnix.com/abhijeeth-gadwal
